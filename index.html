@@ -720,7 +720,7 @@ $("#btnSubmit").addEventListener("click",async()=>{
     await withTimeout(commit,15000);
     if(job.isQ){curRec={...job.rec,t0:null};doneMap[job.rec.mst]=curRec}
     toast(`Đã gửi ${job.rec.mst}: ${job.rec.diem} điểm${job.rec.liet?" · LIỆT – xử lý ngay":""}`);
-    clear();showDone(job.rec,"ok");loadShopState();
+    Object.keys(cache).forEach(k=>delete cache[k]);clear();showDone(job.rec,"ok");loadShopState();
   }catch(e){
     if(e&&e.code==="timeout"){ // Firestore giữ lượt trên máy và tự gửi khi có mạng
       setPend([...pend(),{id:job.id,mst:job.rec.mst}]);clear();showDone(job.rec,"wait");toast("Mạng yếu: đã lưu trên máy, sẽ tự gửi khi có mạng.");
@@ -738,7 +738,9 @@ $("#tab-cham").onclick=()=>showTab("cham");$("#tab-kq").onclick=()=>showTab("kq"
 $("#kqDate").value=vnDate();$("#kqMonth").value=vnDate().slice(0,7);
 let kqMode="ngay",kqList="liet",showAll={};
 const cache={};
-async function q(key,fn,force){if(force||!cache[key])cache[key]=(await retry(fn)).docs.map(d=>d.data());return cache[key]}
+const CACHE_MS=60000;                                          // số liệu báo cáo tự tải lại sau 1 phút
+async function q(key,fn,force){const c=cache[key];
+  if(force||!c||Date.now()-c.t>CACHE_MS)cache[key]={t:Date.now(),d:(await retry(fn)).docs.map(d=>d.data())};return cache[key].d}
 async function loadKQ(force){
   const B=$("#kqBody");
   $("#fDate").hidden=kqMode!=="ngay";$("#fMonth").hidden=kqMode==="ngay";
@@ -750,6 +752,7 @@ async function loadKQ(force){
         q("q"+day,()=>fs.collection("qlst").where("ngay","==",day).get(),force),
         q("k"+day,()=>fs.collection("kt").where("ngay","==",day).get(),force)]);renderNgay(day,d,k)}
     else{const s=await q("s"+ym,()=>fs.collection("thang").where("ym","==",ym).get(),force);kqMode==="thang"?renderThang(ym,s):renderLap(ym,s)}
+    B.insertAdjacentHTML("beforeend",`<p class="hint" style="margin-top:12px">Số liệu lúc ${vnTime(Date.now())} · tự cập nhật sau 1 phút, hoặc bấm <b>Làm mới</b>.</p>`);
   }catch(e){console.warn(e);B.innerHTML=`<div class="empty">Không tải được (${esc(e&&e.code||"lỗi")}). Bấm Làm mới để thử lại.</div>`}
 }
 function fillKqFilters(){
@@ -792,6 +795,11 @@ $("#kqBody").addEventListener("click",e=>{
     mb.textContent=open?"Thu gọn":mb.dataset.label;return}
   const a=e.target.closest("button[data-all]");if(a){showAll[a.dataset.all]=!showAll[a.dataset.all];loadKQ()}
 });
+const BANDS=[["≥ 90 điểm",d=>d>=90,"c-ok"],["80 – 89",d=>d>=80&&d<90,""],[`${LOW} – 79`,d=>d>=LOW&&d<80,"c-warn"],[`Dưới ${LOW}`,d=>d<LOW,"c-bad"]];
+function bandTable(groups){ // groups: [[tên cột, [{diem,liet}]]]
+  const row=(lbl,f,cls)=>`<tr><td>${lbl}</td>${groups.map(([,a])=>{const n=cnt(a,f);return `<td class="n ${n?cls:""}">${D(n)}${n&&a.length?` <span class="note">(${pct(n,a.length)}%)</span>`:""}</td>`}).join("")}</tr>`;
+  return tableRaw(["Dải điểm",...groups.map(([h])=>({h,r:1}))],BANDS.map(([l,f,c])=>row(l,x=>f(x.diem),c)).concat([row("Trong đó LIỆT",x=>x.liet,"c-bad"),
+    `<tr class="tot"><td>Tổng · Điểm TB</td>${groups.map(([,a])=>`<td class="n">${D(a.length)} · ${f1(avg(a.map(x=>x.diem)))}</td>`).join("")}</tr>`]))}
 const REC_HEAD=["MST",{h:"Siêu thị"},{h:"Điểm",r:1},{h:"Số lỗi",r:1},{h:"Câu lỗi"},{h:"QLTP"},{h:"Người chấm"},{h:"Hình thức"},{h:"Giờ"}];
 function recRow(r){const qs=(r.loi||[]).map(l=>l.q);
   return rowDet([esc(r.mst),TX(esc(shortName(r.ten))),TN(`${r.liet?'<span class="tag-liet" style="margin:0 4px 0 0">LIỆT</span>':""}${r.diem}`,r.liet||r.diem<LOW?"c-bad":r.diem>=90?"c-ok":""),TN(D((r.loi||[]).length)),TL(qs.join(", ")||"-"),
@@ -887,12 +895,15 @@ function renderNgay(day,dAll,kAll){
   rsmList.forEach(r=>{rows2.push(statRow(r,"grp"));sortG(Object.values(Q1).filter(q=>q.rsm===r.name)).forEach(q=>rows2.push(statRow(q,"",kqMode+"|"+r.name)))});
   rows2.push(statRow(T,"tot"));
   h+=tbl2Title("Bảng 2 · QLTP theo RSM")+tableRaw(["QLTP / RSM",...STAT_HEAD],rows2);
-  const tabs=[["liet",`LIỆT & dưới ${LOW}đ`],["kt","Lượt QLTP/RSM/chéo"],["miss","Chưa chấm"],["top","Lỗi nhiều nhất"]];
+  const tabs=[["liet",`LIỆT & dưới ${LOW}đ`],["da",`Đã chấm (${recs.length+kts.length})`],["kt","Lượt QLTP/RSM/chéo"],["miss","Chưa chấm"],["top","Lỗi nhiều nhất"]];
   if(!tabs.some(t=>t[0]===kqList))kqList="liet";
   h+=`<div class="tbl2h"><h3 class="tbl-title">Cảnh báo & danh sách chi tiết</h3><span class="tbl2b"><button type="button" class="ghost sm" id="listTg" aria-expanded="${!LIST_HIDE}">${LIST_HIDE?"▸ Hiện":"▾ Ẩn"}</button></span></div><div id="listBox"${LIST_HIDE?" hidden":""}>`;
   h+=`<div class="subtabs" id="kqSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${kqList===v}">${t}</button>`).join("")}</div>`;
   const sortS=(a,b)=>(a.liet?a.diem-1000:a.diem)-(b.liet?b.diem-1000:b.diem);
-  if(kqList==="miss")h+=moreTable(["MST",{h:"Siêu thị"},{h:"QLTP"},{h:"RSM"}],miss.sort((a,b)=>(a.rsm+a.qltp+a.mst).localeCompare(b.rsm+b.qltp+b.mst,"vi",{numeric:true})).map(s=>`<tr>${TL(esc(s.mst))}${TX(esc(shortName(s.ten)))}${TL(esc(s.qltp))}${TL(esc(s.rsm))}</tr>`),`<div class="empty">Tất cả shop đã chấm.</div>`);
+  if(kqList==="da"){const all=recs.concat(kts).sort((a,b)=>(a.liet?a.diem-1000:a.diem)-(b.liet?b.diem-1000:b.diem));
+    h+=all.length?`<h3 class="tbl-title">Phân bố điểm ngày ${dmy(day)}</h3>`+bandTable([["QLST tự chấm",recs],["QLTP/RSM/chéo",kts],["Tất cả",all]])+
+      `<h3 class="tbl-title">Tất cả lượt đã chấm (điểm thấp lên trước · bấm dòng xem lỗi, ảnh)</h3>`+moreTable(REC_HEAD,all.map(recRow),""):`<div class="empty">Chưa có lượt chấm ngày ${dmy(day)}.</div>`}
+  else if(kqList==="miss")h+=moreTable(["MST",{h:"Siêu thị"},{h:"QLTP"},{h:"RSM"}],miss.sort((a,b)=>(a.rsm+a.qltp+a.mst).localeCompare(b.rsm+b.qltp+b.mst,"vi",{numeric:true})).map(s=>`<tr>${TL(esc(s.mst))}${TX(esc(shortName(s.ten)))}${TL(esc(s.qltp))}${TL(esc(s.rsm))}</tr>`),`<div class="empty">Tất cả shop đã chấm.</div>`);
   else if(kqList==="top"){const all=recs.concat(kts),cnt={};all.forEach(r=>(r.loi||[]).forEach(l=>cnt[l.q]=(cnt[l.q]||0)+1));
     const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
     h+=top.length?moreTable(["Câu",{h:"Nội dung"},{h:"Số lượt",r:1},{h:"% lượt chấm",r:1}],top.map(([n,c])=>`<tr><td class="n" style="text-align:left">${n}</td><td style="white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n">${c}</td><td class="n">${pct(c,all.length)}%</td></tr>`)):`<div class="empty">Chưa có lỗi nào.</div>`}
@@ -952,15 +963,32 @@ function renderThang(ym,sums){
   const keys={pct:a=>{const n=sum(a,r=>r.need);return n?sum(a,r=>r.done)/n:0},diem:a=>avg(a.flatMap(r=>r.qd))??999,liet:a=>-sum(a,r=>r.liet)};
   h+=hierTables("Bảng 1 · Tháng theo RSM","Bảng 2 · Tháng – QLTP theo RSM",items,cols,keys);
   // danh sách chi tiết
-  const tabs=[["qlst","Shop QLST thiếu ngày chấm"],["qltp","Shop QLTP chưa chấm trong tháng"]];
+  const scored=items.filter(r=>r.qd.length||r.kt.length);
+  const tabs=[["qlst","Shop QLST thiếu ngày chấm"],["da",`Đã chấm (${scored.length} shop)`],["qltp","Shop QLTP chưa chấm trong tháng"]];
+  h+=`<div class="tbl2h"><h3 class="tbl-title">Cảnh báo & danh sách chi tiết</h3><span class="tbl2b"><button type="button" class="ghost sm" id="listTg" aria-expanded="${!LIST_HIDE}">${LIST_HIDE?"▸ Hiện":"▾ Ẩn"}</button></span></div><div id="listBox"${LIST_HIDE?" hidden":""}>`;
   h+=`<div class="subtabs" id="thSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${thList===v}">${t}</button>`).join("")}</div>`;
   const ord=(x,y)=>(x.s.rsm+x.s.qltp+x.s.mst).localeCompare(y.s.rsm+y.s.qltp+y.s.mst,"vi",{numeric:true});
-  if(thList==="qlst"){const l=items.filter(r=>r.need&&r.done<r.need).sort(ord);
+  if(thList==="da"){
+    const sm=r=>{const ds=Object.entries((bySum[r.s.mst]||{}).qlst||{}).filter(([k])=>{const d=kd(k);return d>=moc&&d<=to}).sort();return ds};
+    const avgQ=r=>avg(r.qd),key=r=>avgQ(r)??avg(r.kt.map(x=>x.diem))??999;
+    const l=scored.slice().sort((a,b)=>(b.liet-a.liet)||key(a)-key(b));
+    const shopAvg=l.map(r=>({diem:Math.round(avgQ(r)??avg(r.kt.map(x=>x.diem))),liet:r.liet>0}));
+    h+=scored.length?`<h3 class="tbl-title">Phân bố điểm TB của shop trong tháng</h3>`+bandTable([["Số shop",shopAvg]])+
+      `<h3 class="tbl-title">Điểm từng shop (điểm thấp lên trước · bấm dòng xem điểm từng ngày)</h3>`+
+      moreTable(["MST",{h:"Siêu thị"},{h:"TB QLST",r:1},{h:"Thấp nhất",r:1},{h:"Ngày QLST chấm",r:1},{h:"Lượt cấp trên",r:1},{h:"TB cấp trên",r:1},{h:"LIỆT",r:1},{h:"Lỗi lặp",r:1},{h:"QLTP"}],
+        l.map(r=>{const a=avgQ(r),mn=r.qd.length?Math.min(...r.qd):null,ka=avg(r.kt.map(x=>x.diem));
+          const det=`<div><b>QLST tự chấm:</b> ${sm(r).map(([k,v])=>`${dmy(kd(k)).slice(0,5)}: <b class="${v.diem<LOW?"c-bad":""}">${v.diem}</b>`).join(" · ")||"chưa có"}</div>`+
+            `<div style="margin-top:6px"><b>Cấp trên chấm:</b> ${r.kt.slice().sort((x,y)=>x.ngay.localeCompare(y.ngay)).map(x=>`${dmy(x.ngay).slice(0,5)} ${esc(x.cv)}${x.nguoi?" "+esc(x.nguoi):""}: <b class="${x.liet||x.diem<LOW?"c-bad":""}">${x.liet?"LIỆT · ":""}${x.diem}</b>`).join(" · ")||"chưa có"}</div>`;
+          return rowDet([esc(r.s.mst),TX(esc(shortName(r.s.ten))),TN(f1(a),a==null?"muted":a<LOW?"c-bad":a>=90?"c-ok":a<80?"c-warn":""),TN(mn==null?"-":mn,mn!=null&&mn<LOW?"c-bad":""),
+            TN(`${D(r.done)}/${r.need||"-"}`),TN(D(r.kt.length)),TN(f1(ka),ka!=null&&ka<LOW?"c-bad":""),TN(D(r.liet),r.liet?"c-bad":""),TN(D(r.rep),r.rep?"c-bad":""),TL(esc(r.s.qltp))],det,r.liet?"liet-row":"",10)}),"")
+      :`<div class="empty">${started?"Chưa có shop nào được chấm trong tháng.":"Chưa tới ngày mốc."}</div>`}
+  else if(thList==="qlst"){const l=items.filter(r=>r.need&&r.done<r.need).sort(ord);
     h+=moreTable(["MST","Siêu thị","QLTP","Đã chấm","Phải chấm","Thiếu"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td class="n">${D(r.done)}</td><td class="n">${r.need}</td><td class="n c-bad">${r.need-r.done}</td></tr>`),
       `<div class="empty">${started?"Không có shop thiếu ngày chấm.":"Chưa tới ngày mốc."}</div>`)}
   else{const l=items.filter(r=>!r.ktQ.length).sort(ord);
     h+=moreTable(["MST","Siêu thị","QLTP","RSM"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td style="text-align:right">${esc(r.s.rsm)}</td></tr>`),
       `<div class="empty">Tất cả shop đã được QLTP chấm trong tháng.</div>`)}
+  h+=`</div>`;
   $("#kqBody").innerHTML=h;
 }
 
