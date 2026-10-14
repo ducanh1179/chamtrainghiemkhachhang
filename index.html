@@ -79,8 +79,17 @@ textarea{min-height:56px;resize:vertical}
 .zone .q{border-left:4px solid var(--zc)}
 .zone .q.err{border-left-color:var(--bad)}
 .tbl-title{font-size:15px;margin:18px 0 6px}
+body.wide .wrap{max-width:1240px}
 table.stat td{font-variant-numeric:tabular-nums}
 table.stat tr.grp td{background:var(--sunk);font-weight:700}
+table.stat tr.grp{cursor:pointer} table.stat tr.grp:hover td{background:var(--line)}
+table.stat tr.grp .arr{display:inline-block;width:14px;color:var(--brand)}
+table.stat tr.ch td:first-child{padding-left:28px}
+table.stat th:first-child,table.stat td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+table.stat tr.grp td:first-child{background:var(--sunk)} table.stat tr.tot td:first-child{background:var(--brand-soft)}
+.tbl2h{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tbl2b{display:flex;gap:6px;margin-bottom:6px}
+.ghost.sm{padding:5px 10px;font-size:12px}
 table.stat tr.tot td{background:var(--brand-soft);font-weight:800;border-top:2px solid var(--brand)}
 td.c-bad{color:var(--bad);font-weight:700} td.c-warn{color:var(--warn);font-weight:700} td.c-ok{color:var(--ok);font-weight:700} td.muted{color:var(--muted)}
 .q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:10px;margin-bottom:8px}
@@ -638,7 +647,7 @@ $("#btnSubmit").addEventListener("click",async()=>{
 });
 
 /* ================== KẾT QUẢ ================== */
-function showTab(t){const kq=t==="kq";$("#view-cham").hidden=kq;$("#view-kq").hidden=!kq;$("#bar").hidden=kq;
+function showTab(t){const kq=t==="kq";document.body.classList.toggle("wide",kq);$("#view-cham").hidden=kq;$("#view-kq").hidden=!kq;$("#bar").hidden=kq;
   $("#tab-cham").setAttribute("aria-selected",!kq);$("#tab-kq").setAttribute("aria-selected",kq);
   if(kq)loadKQ();try{localStorage.setItem("cham_tab",t)}catch(e){}}
 $("#tab-cham").onclick=()=>showTab("cham");$("#tab-kq").onclick=()=>showTab("kq");
@@ -676,6 +685,14 @@ $("#kqMode").addEventListener("click",e=>{const b=e.target.closest("button");if(
   document.querySelectorAll("#kqMode button").forEach(x=>x.setAttribute("aria-pressed",x===b));loadKQ()});
 $("#kqBody").addEventListener("click",e=>{
   const b=e.target.closest("#kqSub button");if(b){kqList=b.dataset.v;loadKQ();return}
+  const t=e.target.closest("#thSub button");if(t){thList=t.dataset.v;loadKQ();return}
+  const oa=e.target.closest("button[data-openall]");
+  if(oa){const on=oa.dataset.openall==="1",tb=oa.closest(".tbl2h").nextElementSibling;
+    tb.querySelectorAll("tr.grp").forEach(g=>{OPEN[g.dataset.g]=on;g.querySelector(".arr").textContent=on?"▾":"▸"});
+    tb.querySelectorAll("tr.ch").forEach(r=>r.hidden=!on);return}
+  const g=e.target.closest("tr.grp[data-g]");
+  if(g){const k=g.dataset.g;OPEN[k]=!OPEN[k];g.querySelector(".arr").textContent=OPEN[k]?"▾":"▸";
+    g.closest("tbody").querySelectorAll("tr.ch").forEach(r=>{if(r.dataset.p===k)r.hidden=!OPEN[k]})}
   const a=e.target.closest("button[data-all]");if(a){showAll[a.dataset.all]=!showAll[a.dataset.all];loadKQ()}
 });
 function pillCls(r){return r.liet?"liet":r.diem<LOW?"low":r.diem>=90?"good":"mid"}
@@ -709,12 +726,20 @@ function sortG(list){
   return list.slice().sort(by[m]||by.ten);
 }
 function pctCls(a,b){if(!b||!a)return "muted";const p=a*100/b;return p<80?"c-bad":p<100?"c-warn":"c-ok"}
-function statRow(g,cls){
-  const d=g.q.length;
-  return `<tr class="${cls}"><td>${cls==="grp"?"▸ ":""}${esc(g.name)}</td><td class="n">${D(g.n)}</td><td class="n">${D(d)}</td>
+const OPEN={};                                             // RSM đang mở trong Bảng 2
+function grpAttr(cls,key,pkey){
+  if(cls==="grp")return ` data-g="${esc(key)}" title="Bấm để ẩn/hiện QLTP"`;
+  if(pkey!=null)return ` data-p="${esc(pkey)}"${OPEN[pkey]?"":" hidden"}`;
+  return "";
+}
+const arrow=k=>`<span class="arr">${OPEN[k]?"▾":"▸"}</span> `;
+function statRow(g,cls,pkey){
+  const d=g.q.length,key=kqMode+"|"+g.name;
+  return `<tr class="${cls}${pkey!=null?" ch":""}"${grpAttr(cls,key,pkey)}><td>${cls==="grp"?arrow(key):""}${esc(g.name)}</td><td class="n">${D(g.n)}</td><td class="n">${D(d)}</td>
     <td class="n ${pctCls(d,g.n)}">${P(d,g.n)}</td><td class="n">${f1(avg(g.q))}</td><td class="n">${D(g.k.length)}</td><td class="n">${f1(avg(g.k))}</td>
     <td class="n ${g.liet?"c-bad":""}">${D(g.liet)}</td><td class="n ${g.low?"c-bad":""}">${D(g.low)}</td><td class="n ${g.n-d?"c-warn":""}">${D(g.n-d)}</td></tr>`;
 }
+function tbl2Title(t){return `<div class="tbl2h"><h3 class="tbl-title">${t}</h3><span class="tbl2b"><button type="button" class="ghost sm" data-openall="1">Mở tất cả</button><button type="button" class="ghost sm" data-openall="0">Thu gọn</button></span></div>`}
 function tableRaw(head,rows){return `<div class="tblwrap"><table class="stat"><thead><tr>${head.map((h,i)=>`<th${i?' style="text-align:right"':""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`}
 function statTable(first,list,tot){return tableRaw([first,...STAT_HEAD],list.map(g=>statRow(g,"")).concat(tot?[statRow(tot,"tot")]:[]))}
 function renderNgay(day,dAll,kAll){
@@ -738,9 +763,9 @@ function renderNgay(day,dAll,kAll){
   h+=`<h3 class="tbl-title">Bảng 1 · Tổng hợp theo RSM</h3>`+statTable("RSM",sortG(Object.values(R1)),T);
   const rsmList=sortG(Object.values(R1));
   const rows2=[];
-  rsmList.forEach(r=>{rows2.push(statRow(r,"grp"));sortG(Object.values(Q1).filter(q=>q.rsm===r.name)).forEach(q=>rows2.push(statRow(q,"")))});
+  rsmList.forEach(r=>{rows2.push(statRow(r,"grp"));sortG(Object.values(Q1).filter(q=>q.rsm===r.name)).forEach(q=>rows2.push(statRow(q,"",kqMode+"|"+r.name)))});
   rows2.push(statRow(T,"tot"));
-  h+=`<h3 class="tbl-title">Bảng 2 · QLTP theo RSM</h3>`+tableRaw(["QLTP / RSM",...STAT_HEAD],rows2);
+  h+=tbl2Title("Bảng 2 · QLTP theo RSM")+tableRaw(["QLTP / RSM",...STAT_HEAD],rows2);
   const tabs=[["liet",`LIỆT & dưới ${LOW}đ`],["kt","Lượt QLTP/RSM/chéo"],["miss","Chưa chấm"],["top","Lỗi nhiều nhất"]];
   if(!tabs.some(t=>t[0]===kqList))kqList="liet";
   h+=`<div class="subtabs" id="kqSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${kqList===v}">${t}</button>`).join("")}</div>`;
@@ -755,57 +780,96 @@ function renderNgay(day,dAll,kAll){
 }
 
 function mocOf(ym){const m=MOC[ym];return m&&m.slice(0,7)===ym?m:ym+"-01"}
+/* Bảng phân cấp dùng chung: Bảng 1 theo RSM (+TỔNG), Bảng 2 QLTP theo RSM (+TỔNG) */
+function hierTables(t1,t2,items,cols,keys){
+  const R={},Qm={};items.forEach(it=>{(R[it.rsm]||(R[it.rsm]=[])).push(it);(Qm[it.qltp]||(Qm[it.qltp]={rsm:it.rsm,arr:[]})).arr.push(it)});
+  const m=$("#kqSort")?$("#kqSort").value:"ten";
+  const srt=list=>list.sort((x,y)=>m!=="ten"&&keys[m]?(keys[m](x.arr)-keys[m](y.arr))||x.name.localeCompare(y.name,"vi",{numeric:true}):x.name.localeCompare(y.name,"vi",{numeric:true}));
+  const row=(name,arr,cls,pkey)=>{const key=kqMode+"|"+name;return `<tr class="${cls}${pkey!=null?" ch":""}"${grpAttr(cls,key,pkey)}><td>${cls==="grp"?arrow(key):""}${esc(name)}</td>${cols.map(c=>{const r=c.f(arr);return `<td class="n ${r.c||""}">${r.v}</td>`}).join("")}</tr>`};
+  const rs=srt(Object.keys(R).map(k=>({name:k,arr:R[k]})));
+  const head=cols.map(c=>c.h);
+  let h=`<h3 class="tbl-title">${t1}</h3>`+tableRaw(["RSM",...head],rs.map(r=>row(r.name,r.arr,"")).concat([row("TỔNG",items,"tot")]));
+  const rows2=[];rs.forEach(r=>{rows2.push(row(r.name,r.arr,"grp"));srt(Object.keys(Qm).filter(q=>Qm[q].rsm===r.name).map(q=>({name:q,arr:Qm[q].arr}))).forEach(q=>rows2.push(row(q.name,q.arr,"",kqMode+"|"+r.name)))});
+  rows2.push(row("TỔNG",items,"tot"));
+  return h+tbl2Title(t2)+tableRaw(["QLTP / RSM",...head],rows2);
+}
+const sum=(arr,f)=>arr.reduce((a,x)=>a+f(x),0);
+const cnt=(arr,f)=>arr.filter(f).length;
+const V=(v,c)=>({v,c});
+let thList="qlst";
+
 function renderThang(ym,sums){
-  const moc=mocOf(ym),end=monthEnd(ym),today=vnDate(),to=today<end?today:end;
-  if(to<moc){$("#kqBody").innerHTML=`<div class="empty">Tháng ${ym.slice(5)}/${ym.slice(0,4)} tính từ ngày mốc ${dmy(moc)} — chưa tới ngày mốc.</div>`;return}
+  const moc=mocOf(ym),end=monthEnd(ym),today=vnDate(),to=today<end?today:end,started=to>=moc;
   const bySum={};sums.forEach(s=>bySum[s.mst]=s);
-  const act=ACTIVE.filter(s=>s.khaiTruong<=to&&flt(s));
-  const rows=act.map(s=>{const sm=bySum[s.mst]||{},from=s.khaiTruong>moc?s.khaiTruong:moc;
-    const need=daysBetween(from,to);
-    const qd=Object.entries(sm.qlst||{}).filter(([k])=>{const d=kd(k);return d>=from&&d<=to});
-    const kt=Object.values(sm.kt||{}).filter(x=>x.ngay>=moc&&x.ngay<=to);
-    const ktQ=kt.filter(x=>x.cv==="QLTP");
-    return {s,need,done:qd.length,qAvg:avg(qd.map(([,v])=>v.diem)),kt,ktQ,liet:kt.filter(x=>x.liet).length,rep:repeats(sm).filter(x=>x.active).length}});
-  const need=rows.reduce((a,r)=>a+r.need,0),done=rows.reduce((a,r)=>a+r.done,0);
-  const covered=rows.filter(r=>r.ktQ.length).length;
-  const allK=rows.flatMap(r=>r.kt);
-  let h=`<div class="notice ok" style="margin-top:10px">Ngày mốc tháng ${ym.slice(5)}: <b>${dmy(moc)}</b> → tính đến <b>${dmy(to)}</b> (${daysBetween(moc,to)} ngày). Shop khai trương sau mốc tính từ ngày khai trương. Đổi ngày mốc ở sheet CAU_HINH_WEB.</div>`;
-  h+=kpis([[D(act.length),"Shop hoạt động"],[done?`${done}/${need}`:"-","Lượt QLST đã chấm / phải chấm"],[P(done,need),"Tỷ lệ QLST chấm",pct(done,need)<80],
-    [f1(avg(rows.filter(r=>r.qAvg!=null).map(r=>r.qAvg))),"Điểm TB QLST"],[covered?`${covered}/${act.length}`:"-","Shop QLTP đã chấm ≥1 lần"],
-    [f1(avg(allK.map(x=>x.diem))),"Điểm TB QLTP/RSM/chéo"],[D(allK.filter(x=>x.liet).length),"Lượt LIỆT",1],[D(rows.reduce((a,r)=>a+r.rep,0)),"Cảnh báo lặp lại",1]]);
-  const G={};rows.forEach(r=>{const g=G[r.s.qltp]||(G[r.s.qltp]={name:r.s.qltp,rsm:r.s.rsm,rows:[]});g.rows.push(r)});
-  const gs=Object.values(G).map(g=>({...g,need:g.rows.reduce((a,r)=>a+r.need,0),done:g.rows.reduce((a,r)=>a+r.done,0),cov:g.rows.filter(r=>r.ktQ.length).length,
-    kAvg:avg(g.rows.flatMap(r=>r.ktQ.map(x=>x.diem))),liet:g.rows.reduce((a,r)=>a+r.liet,0)}));
-  // Top 5 theo % QLST chấm
-  h+=groupBlock("thQ",`Top ${TOPN} QLTP có tỷ lệ QLST chấm thấp nhất`,gs.slice().sort((a,b)=>a.done/a.need-b.done/b.need),
-    g=>{const p=pct(g.done,g.need);return gRow(g.name,`${esc(g.rsm)} · ${D(g.done)}/${g.need} lượt · ${g.rows.length} shop`,P(g.done,g.need),p<80?"low":p<100?"mid":"good")},
-    g=>g.rows.slice().sort((a,b)=>a.done/a.need-b.done/b.need).map(r=>shopLine(r.s,`${r.done}/${r.need} ngày`,r.done<r.need?"low":"good")).join(""));
-  // Top 5 theo độ phủ QLTP
-  h+=groupBlock("thK",`Top ${TOPN} QLTP chấm shop ít nhất (mục tiêu mỗi shop ≥1 lần/tháng)`,gs.slice().sort((a,b)=>a.cov/a.rows.length-b.cov/b.rows.length),
-    g=>{const p=pct(g.cov,g.rows.length);return gRow(g.name,`${esc(g.rsm)} · đã chấm ${D(g.cov)}/${g.rows.length} shop · TB ${f1(g.kAvg)}${g.liet?` · <b style="color:var(--bad)">${g.liet} LIỆT</b>`:""}`,P(g.cov,g.rows.length),p<80?"low":p<100?"mid":"good")},
-    g=>g.rows.slice().sort((a,b)=>a.ktQ.length-b.ktQ.length).map(r=>shopLine(r.s,r.ktQ.length?`${r.ktQ.length} lần · ${f1(avg(r.ktQ.map(x=>x.diem)))}đ`:"Chưa chấm",r.ktQ.length?"good":"low")).join(""));
+  const act=ACTIVE.filter(s=>s.khaiTruong<=end&&flt(s));
+  const items=act.map(s=>{const sm=bySum[s.mst]||{},from=s.khaiTruong>moc?s.khaiTruong:moc;
+    const need=started&&to>=from?daysBetween(from,to):0;
+    const qd=Object.entries(sm.qlst||{}).filter(([k])=>{const d=kd(k);return d>=from&&d<=to}).map(([,v])=>v.diem);
+    const kt=Object.values(sm.kt||{}).filter(x=>x.ngay>=moc&&x.ngay<=to),ktQ=kt.filter(x=>x.cv==="QLTP");
+    return {s,rsm:s.rsm,qltp:s.qltp,need,done:qd.length,qd,kt,ktQ,liet:cnt(kt,x=>x.liet),rep:repeats(sm).filter(x=>x.active).length}});
+  const need=sum(items,r=>r.need),done=sum(items,r=>r.done),cov=cnt(items,r=>r.ktQ.length),allK=items.flatMap(r=>r.kt),allQ=items.flatMap(r=>r.qd);
+  let h=started?`<div class="notice ok" style="margin-top:10px">Tháng ${ym.slice(5)}/${ym.slice(0,4)}: tính từ ngày mốc <b>${dmy(moc)}</b> đến <b>${dmy(to)}</b> (${daysBetween(moc,to)} ngày). Shop khai trương sau mốc tính từ ngày khai trương. Đổi ngày mốc ở sheet CAU_HINH_WEB.</div>`
+    :`<div class="notice" style="margin-top:10px">Tháng ${ym.slice(5)}/${ym.slice(0,4)} tính từ ngày mốc <b>${dmy(moc)}</b> — chưa tới ngày mốc nên chưa tính số liệu. Bảng sẽ tự cập nhật từ ${dmy(moc)}.</div>`;
+  h+=kpis([[D(act.length),"Shop hoạt động"],[done?`${done}/${need}`:"-","Lượt QLST đã chấm / phải chấm"],[P(done,need),"Tỷ lệ QLST chấm",need&&pct(done,need)<80],
+    [f1(avg(allQ)),"Điểm TB QLST"],[cov?`${cov}/${act.length}`:"-","Shop QLTP đã chấm ≥1 lần"],[P(cov,act.length),"Độ phủ QLTP",act.length&&pct(cov,act.length)<100],
+    [f1(avg(allK.map(x=>x.diem))),"Điểm TB cấp trên"],[D(cnt(allK,x=>x.liet)),"Lượt LIỆT",1],[D(sum(items,r=>r.rep)),"Cảnh báo lặp lại",1]]);
+  const cols=[
+    {h:"Shop HĐ",f:a=>V(D(a.length))},
+    {h:"Lượt phải chấm",f:a=>V(D(sum(a,r=>r.need)))},
+    {h:"QLST đã chấm",f:a=>V(D(sum(a,r=>r.done)))},
+    {h:"% QLST chấm",f:a=>{const d=sum(a,r=>r.done),n=sum(a,r=>r.need);return V(P(d,n),pctCls(d,n))}},
+    {h:"TB QLST",f:a=>V(f1(avg(a.flatMap(r=>r.qd))))},
+    {h:"Shop QLTP đã chấm",f:a=>V(D(cnt(a,r=>r.ktQ.length)))},
+    {h:"% phủ QLTP",f:a=>{const c=cnt(a,r=>r.ktQ.length);return V(P(c,a.length),started?pctCls(c,a.length):"muted")}},
+    {h:"Lượt QLTP",f:a=>V(D(sum(a,r=>r.ktQ.length)))},
+    {h:"TB QLTP",f:a=>V(f1(avg(a.flatMap(r=>r.ktQ.map(x=>x.diem)))))},
+    {h:"Lượt RSM/chéo",f:a=>V(D(sum(a,r=>r.kt.length-r.ktQ.length)))},
+    {h:"LIỆT",f:a=>{const v=sum(a,r=>r.liet);return V(D(v),v?"c-bad":"")}},
+    {h:"Cảnh báo lặp lại",f:a=>{const v=sum(a,r=>r.rep);return V(D(v),v?"c-bad":"")}}];
+  const keys={pct:a=>{const n=sum(a,r=>r.need);return n?sum(a,r=>r.done)/n:0},diem:a=>avg(a.flatMap(r=>r.qd))??999,liet:a=>-sum(a,r=>r.liet)};
+  h+=hierTables("Bảng 1 · Tháng theo RSM","Bảng 2 · Tháng – QLTP theo RSM",items,cols,keys);
+  // danh sách chi tiết
+  const tabs=[["qlst","Shop QLST thiếu ngày chấm"],["qltp","Shop QLTP chưa chấm trong tháng"]];
+  h+=`<div class="subtabs" id="thSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${thList===v}">${t}</button>`).join("")}</div>`;
+  const ord=(x,y)=>(x.s.rsm+x.s.qltp+x.s.mst).localeCompare(y.s.rsm+y.s.qltp+y.s.mst,"vi",{numeric:true});
+  if(thList==="qlst"){const l=items.filter(r=>r.need&&r.done<r.need).sort(ord);
+    h+=l.length?tableRaw(["MST","Siêu thị","QLTP","Đã chấm","Phải chấm","Thiếu"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td class="n">${D(r.done)}</td><td class="n">${r.need}</td><td class="n c-bad">${r.need-r.done}</td></tr>`))
+      :`<div class="empty">${started?"Không có shop thiếu ngày chấm.":"Chưa tới ngày mốc."}</div>`}
+  else{const l=items.filter(r=>!r.ktQ.length).sort(ord);
+    h+=l.length?tableRaw(["MST","Siêu thị","QLTP","RSM"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td style="text-align:right">${esc(r.s.rsm)}</td></tr>`))
+      :`<div class="empty">Tất cả shop đã được QLTP chấm trong tháng.</div>`}
   $("#kqBody").innerHTML=h;
 }
 
 function renderLap(ym,sums){
-  const rows=[];sums.filter(flt).forEach(s=>repeats(s).forEach(x=>{if(x.active||x.fixed)rows.push({s,x})}));
-  const act=rows.filter(r=>r.x.active),fixed=rows.filter(r=>r.x.fixed);
-  let h=kpis([[D(act.length),"Cảnh báo đang mở",1],[D(new Set(act.map(r=>r.s.mst)).size),"Shop có cảnh báo",1],[D(fixed.length),"Đã khắc phục (QLTP chấm lại)"]]);
+  const bySum={};sums.forEach(s=>bySum[s.mst]=s);
+  const end=monthEnd(ym),act=ACTIVE.filter(s=>s.khaiTruong<=end&&flt(s));
+  const items=act.map(s=>{const rp=repeats(bySum[s.mst]);return {s,rsm:s.rsm,qltp:s.qltp,open:rp.filter(x=>x.active),fixed:rp.filter(x=>x.fixed)}});
+  const open=items.flatMap(r=>r.open.map(x=>({s:r.s,x}))),fixed=items.flatMap(r=>r.fixed.map(x=>({s:r.s,x})));
+  let h=kpis([[D(open.length),"Cảnh báo đang mở",1],[D(cnt(items,r=>r.open.length)),"Shop có cảnh báo",1],[D(cnt(open,o=>QMAP[o.x.no].liet)),"Cảnh báo câu LIỆT",1],[D(fixed.length),"Đã khắc phục (cấp trên chấm lại)"]]);
   h+=`<p class="hint" style="margin-top:10px">Cảnh báo khi một tiêu chí có lỗi từ ${REPEAT} ngày trở lên trong tháng. Tự gỡ khi QLTP hoặc RSM chấm lại shop và chọn <b>Không lỗi</b> ở đúng tiêu chí; lỗi lại ${REPEAT} lần sẽ cảnh báo lại.</p>`;
-  const card=({s,x},open)=>{const qq=QMAP[x.no];return `<details class="shop ${open?"is-liet":""}"><summary>
+  const cols=[
+    {h:"Shop HĐ",f:a=>V(D(a.length))},
+    {h:"Shop có cảnh báo",f:a=>{const v=cnt(a,r=>r.open.length);return V(D(v),v?"c-bad":"")}},
+    {h:"Cảnh báo đang mở",f:a=>{const v=sum(a,r=>r.open.length);return V(D(v),v?"c-bad":"")}},
+    {h:"Câu LIỆT",f:a=>{const v=sum(a,r=>cnt(r.open,x=>QMAP[x.no].liet));return V(D(v),v?"c-bad":"")}},
+    {h:"Đã khắc phục",f:a=>{const v=sum(a,r=>r.fixed.length);return V(D(v),v?"c-ok":"")}}];
+  const keys={pct:a=>-cnt(a,r=>r.open.length)/(a.length||1),diem:a=>-sum(a,r=>r.open.length),liet:a=>-sum(a,r=>cnt(r.open,x=>QMAP[x.no].liet))};
+  h+=hierTables("Bảng 1 · Lỗi lặp lại theo RSM","Bảng 2 · Lỗi lặp lại – QLTP theo RSM",items,cols,keys);
+  // theo tiêu chí
+  const byQ={};open.forEach(o=>(byQ[o.x.no]||(byQ[o.x.no]={o:0,f:0})).o++);fixed.forEach(o=>(byQ[o.x.no]||(byQ[o.x.no]={o:0,f:0})).f++);
+  const qs=Object.entries(byQ).sort((a,b)=>b[1].o-a[1].o||a[0]-b[0]);
+  h+=`<h3 class="tbl-title">Bảng 3 · Tiêu chí lặp lại</h3>`+(qs.length?tableRaw(["Câu","Nội dung","Đang mở","Đã gỡ"],qs.map(([n,v])=>`<tr><td>${n}</td><td style="text-align:left;white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n ${v.o?"c-bad":""}">${D(v.o)}</td><td class="n ${v.f?"c-ok":""}">${D(v.f)}</td></tr>`)):`<div class="empty">Không có tiêu chí lặp lại.</div>`);
+  // chi tiết kèm ảnh
+  const card=({s,x},isOpen)=>{const qq=QMAP[x.no];return `<details class="shop ${isOpen?"is-liet":""}"><summary>
     <div style="min-width:0"><div class="nm">${esc(s.mst)} · ${esc(shortName(s.ten))}</div>
     <div class="meta">Câu ${x.no}${qq.liet?" · LIỆT":""} · ${esc(s.qltp)}</div></div>
-    <span class="pill ${open?"liet":"good"}">${open?`${x.after.length} lần`:"Đã gỡ"}</span></summary>
+    <span class="pill ${isOpen?"liet":"good"}">${isOpen?`${x.after.length} lần`:"Đã gỡ"}</span></summary>
     <div class="body"><div>${esc(qq.text)}</div>
     <div class="note">Ngày lỗi: ${x.days.map(dmy).join(", ")}${x.clr?` · Cấp trên chấm lại đạt: ${dmy(x.clr)}`:""}</div>
     ${x.imgs.length?`<div class="thumbs">${x.imgs.slice(0,12).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi câu ${x.no}" loading="lazy"></a>`).join("")}</div>`:""}</div></details>`};
-  // gom theo QLTP: Top 5 nhiều cảnh báo nhất
-  const G={};act.forEach(r=>{const g=G[r.s.qltp]||(G[r.s.qltp]={name:r.s.qltp,rsm:r.s.rsm,items:[]});g.items.push(r)});
-  const gs=Object.values(G).sort((a,b)=>b.items.length-a.items.length);
-  h+=gs.length?groupBlock("lap",`Top ${TOPN} QLTP nhiều cảnh báo lặp lại nhất`,gs,
-    g=>gRow(g.name,`${esc(g.rsm)} · ${new Set(g.items.map(i=>i.s.mst)).size} shop`,`${g.items.length} cảnh báo`,"liet"),
-    g=>g.items.sort((a,b)=>b.x.after.length-a.x.after.length).map(r=>card(r,true)).join("")):`<div class="empty">Không có cảnh báo lỗi lặp lại.</div>`;
-  if(fixed.length)h+=`<h3 style="font-size:15px;margin:18px 0 0">Đã khắc phục</h3>`+fixed.map(r=>card(r,false)).join("");
+  h+=`<h3 class="tbl-title">Chi tiết cảnh báo đang mở (bấm để xem ảnh)</h3>`+(open.length?open.sort((a,b)=>(a.s.rsm+a.s.qltp).localeCompare(b.s.rsm+b.s.qltp,"vi")||b.x.after.length-a.x.after.length).map(o=>card(o,true)).join(""):`<div class="empty">Không có cảnh báo đang mở.</div>`);
+  if(fixed.length)h+=`<h3 class="tbl-title">Đã khắc phục</h3>`+fixed.map(o=>card(o,false)).join("");
   $("#kqBody").innerHTML=h;
 }
 
