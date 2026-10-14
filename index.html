@@ -81,9 +81,21 @@ textarea{min-height:56px;resize:vertical}
 .tbl-title{font-size:15px;margin:18px 0 6px}
 body.wide .wrap{max-width:1240px}
 table.stat td{font-variant-numeric:tabular-nums}
+table.stat td.tx{white-space:normal;min-width:160px;max-width:320px}
+table.stat tr.rowx{cursor:pointer} table.stat tr.rowx:hover td{background:var(--sunk)}
+table.stat tr.rowx td:first-child .arr{display:inline-block;width:14px;color:var(--brand)}
+table.stat tr.det td{white-space:normal;background:var(--sunk);position:static;box-shadow:none}
+table.stat tr.det td .thumbs{margin-top:6px}
+.detbox{position:sticky;left:10px;max-width:calc(100vw - 64px);width:max-content;min-width:0;white-space:normal}
+@media(min-width:760px){.detbox{max-width:680px}} table.stat tr.det ul{margin:4px 0 0;padding-left:18px}
+table.stat tr.liet-row td{background:var(--bad-soft,#fdecec)}
 table.stat tr.grp td{background:var(--sunk);font-weight:700}
 table.stat tr.grp{cursor:pointer} table.stat tr.grp:hover td{background:var(--line)}
 table.stat tr.grp .arr{display:inline-block;width:14px;color:var(--brand)}
+.tg{border:0;background:var(--brand);color:#fff;width:24px;height:24px;border-radius:6px;margin-right:6px;padding:0;cursor:pointer;vertical-align:middle;touch-action:manipulation}
+.tg .arr{color:#fff!important;width:auto!important;font-size:12px}
+table.stat tr.grp td{-webkit-tap-highlight-color:rgba(0,0,0,.08)}
+.more-btn{margin-top:8px;width:100%}
 table.stat tr.ch td:first-child{padding-left:28px}
 table.stat th:first-child,table.stat td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
 table.stat tr.grp td:first-child{background:var(--sunk)} table.stat tr.tot td:first-child{background:var(--brand-soft)}
@@ -108,12 +120,30 @@ td.c-bad{color:var(--bad);font-weight:700} td.c-warn{color:var(--warn);font-weig
 .evi{display:grid;gap:8px}
 .evi .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .photo-btn{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--bad);color:var(--bad);background:var(--surface);font:700 14px var(--f-body);padding:10px 14px;border-radius:8px;cursor:pointer}
-.photo-btn input{position:absolute;width:1px;height:1px;opacity:0}
+.photo-btn{position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.photo-btn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:100px}
 .photo-btn.alt{border-style:solid;border-color:var(--line);color:var(--fg)}
 .req{font-size:12px;font-weight:700;color:var(--bad)}
 .thumbs{display:flex;gap:6px;flex-wrap:wrap}
 .thumbs .t{position:relative}
 .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block;background:var(--sunk)}
+.thumbs .ov{position:absolute;inset:0;border-radius:6px;display:grid;place-items:center;font:700 11px var(--f-body);color:#fff;text-align:center;line-height:1.2;background:rgba(0,0,0,.45)}
+.thumbs .ov.err{background:rgba(198,42,31,.8);cursor:pointer}
+.thumbs .spin{width:22px;height:22px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ver{font:500 11px var(--f-num);color:var(--muted);margin-top:2px}
+.done{border:2px solid var(--ok);background:var(--ok-soft);border-radius:var(--r);padding:14px;display:grid;gap:8px}
+.done.warn{border-color:var(--warn);background:var(--warn-soft)}
+.done-h{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ok)} .done.warn .done-h{color:var(--warn)}
+.done-shop{font-weight:800;font-size:16px}
+.done-score{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.done-score .big{font:800 40px var(--f-num);line-height:1}
+.done-sum{font-size:14px}
+.done-t{width:100%;border-collapse:collapse;background:var(--surface);border-radius:8px;overflow:hidden}
+.done-t{table-layout:fixed}
+.done-t td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px;white-space:normal;word-break:break-word;text-align:left}
+.done-t td.q-no{width:34px;white-space:nowrap;word-break:normal}.done-t td.n{width:42px;text-align:right}
+.done-t td.n{white-space:nowrap;font:700 14px var(--f-num)}
 .thumbs .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);font:700 12px var(--f-body);cursor:pointer}
 
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:5}
@@ -185,6 +215,7 @@ h3{text-wrap:balance}
     <div>
       <h1>Chấm Trải Nghiệm Khách Hàng</h1>
       <div class="sub">26 tiêu chí · 100 điểm · QLST chấm 1 lượt/shop/ngày</div>
+      <div class="ver" id="verLbl"></div>
     </div>
     <div class="tabs" role="tablist">
       <button role="tab" id="tab-cham" aria-selected="true">Chấm</button>
@@ -229,6 +260,7 @@ h3{text-wrap:balance}
       <div class="notice" id="camNotice" hidden>Chấm Camera: chỉ kết luận câu quan sát rõ qua camera. Câu không đủ căn cứ chọn <b>Không xem được</b> (không trừ điểm).</div>
       <div class="notice bad" id="repNotice" hidden></div>
       <div class="notice" id="pendNotice" hidden></div>
+      <div id="doneCard" hidden></div>
     </div>
 
     <div id="zones"></div>
@@ -320,6 +352,7 @@ const Q=[
   [26,"Sàn bán hàng, lối khách di chuyển có rác, bụi hay vết dơ; hoặc trần nhà có mạng nhện nhìn thấy rõ?",2,0]]]
 ];
 const QMAP={};Q.forEach(([z,items])=>items.forEach(i=>QMAP[i[0]]={no:i[0],text:i[1],pts:i[2],liet:!!i[3],zone:z}));
+const APP_VER="14/10/2026 17:20";            // ← đổi mỗi lần cập nhật web
 const LOCK_MIN=10, REPEAT=3, LOW=45, TOPN=5, KEEP_DAYS=45, EXPORT_MAX_DAYS=31;
 
 /* ================== TIỆN ÍCH ================== */
@@ -370,7 +403,9 @@ if(draft.day===vnDate()){S.ans=draft.ans||{};S.ht=draft.ht||S.ht}
 let SHOPS=[],ACTIVE=[],BYMST={},MOC={};
 let doneMap={},curRec=null,curSum=null;
 
-function saveDraft(){store.set("cham_draft",{ht:S.ht,ans:S.ans,day:vnDate()})}
+function saveDraft(){ // ảnh đang tải (chưa có link) không lưu vào nháp
+  const ans=JSON.parse(JSON.stringify(S.ans,(k,v)=>k==="imgs"&&Array.isArray(v)?v.filter(x=>x&&x.u).map(x=>({u:x.u,p:x.p})):v));
+  store.set("cham_draft",{ht:S.ht,ans,day:vnDate()})}
 function saveProfile(){store.set("cham_profile",{cv:S.cv,manv:$("#manv").value.trim(),ten:$("#tenNguoi").value.trim(),rsm:S.rsm,qltp:S.qltp,mst:S.mst})}
 const lietCounts=()=>S.cv!=="QLST"||S.ht==="Chấm chéo";
 
@@ -486,12 +521,18 @@ function renderZones(){
         ${a.v==="bad"?`<div class="evi">
           <div class="row">
             <label class="photo-btn"><input type="file" accept="image/*" capture="environment" data-photo="${no}"><span>📷 Chụp ảnh</span></label>
-            <label class="photo-btn alt"><input type="file" accept="image/*" multiple data-photo="${no}"><span>🖼️ Chọn ảnh có sẵn</span></label>${imgs.length?"":'<span class="req">Bắt buộc ít nhất 1 ảnh</span>'}
-            <div class="thumbs">${imgs.map((im,ix)=>`<div class="t"><img src="${esc(im.u)}" alt="Ảnh đối soát câu ${no}"><button type="button" class="x" data-rm="${no}:${ix}" aria-label="Xoá ảnh">×</button></div>`).join("")}</div>
+            <label class="photo-btn alt"><input type="file" accept="image/*" multiple data-photo="${no}"><span>🖼️ Chọn ảnh có sẵn</span></label><span class="req"${imgs.some(x=>x.u)?" hidden":""}>Bắt buộc ít nhất 1 ảnh</span>
+            <div class="thumbs">${thumbsHTML(no)}</div>
           </div>
           <textarea id="note${no}" data-note="${no}" placeholder="Ghi chú / hướng xử lý (không bắt buộc)">${esc(a.note||"")}</textarea>
         </div>`:""}
       </div>`}).join("")+`</div>`}).join("");
+}
+function thumbsHTML(no){const imgs=(S.ans[no]||{}).imgs||[];
+  return imgs.map((im,ix)=>`<div class="t"><img src="${esc(im.u||im.local)}" alt="Ảnh đối soát câu ${no}">${im.st==="up"?'<div class="ov"><span class="spin"></span></div>':im.st==="err"?`<div class="ov err" data-retry="${no}:${esc(im.tmp)}">Lỗi<br>chạm thử lại</div>`:""}<button type="button" class="x" data-rm="${no}:${ix}" aria-label="Xoá ảnh">×</button></div>`).join("")}
+function refreshQ(no){ // chỉ vẽ lại ảnh của 1 câu → không làm mất chữ đang gõ
+  const q=$("#q"+no);if(!q){return}const t=q.querySelector(".thumbs");if(!t){renderZones();return}
+  t.innerHTML=thumbsHTML(no);const r=q.querySelector(".req");if(r)r.hidden=((S.ans[no]||{}).imgs||[]).some(x=>x.u);
 }
 function calc(){
   let lost=0,done=0,liet=[],errs=0;const lc=lietCounts();
@@ -520,34 +561,45 @@ $("#zones").addEventListener("click",e=>{
   const b=e.target.closest("button[data-q]");
   if(b){const no=b.dataset.q,a=S.ans[no]||(S.ans[no]={});a.v=b.dataset.v;saveDraft();renderZones();renderBar();return}
   const r=e.target.closest("button[data-rm]");
-  if(r){const [no,ix]=r.dataset.rm.split(":");S.ans[no].imgs.splice(+ix,1);saveDraft();renderZones()}
+  if(r){const [no,ix]=r.dataset.rm.split(":");const im=S.ans[no].imgs[+ix];if(im&&im.tmp){delete FILES[im.tmp]}S.ans[no].imgs.splice(+ix,1);saveDraft();refreshQ(no);return}
+  const rt=e.target.closest("[data-retry]");
+  if(rt){const [no,tmp]=rt.dataset.retry.split(":");const im=(S.ans[no].imgs||[]).find(x=>x.tmp===tmp);if(im&&FILES[tmp]){im.st="up";refreshQ(no);UP[tmp]=uploadOne(no,tmp)}}
 });
 $("#zones").addEventListener("input",e=>{const no=e.target.dataset.note;if(!no)return;S.ans[no].note=e.target.value;clearTimeout(saveDraft._t);saveDraft._t=setTimeout(saveDraft,400)});
-$("#zones").addEventListener("change",async e=>{
+const UP={},FILES={};                             // ảnh đang tải nền · file gốc để thử lại
+function waitReady(ms=20000){return new Promise((res,rej)=>{if(ready)return res();const t=Date.now(),iv=setInterval(()=>{if(ready){clearInterval(iv);res()}else if(Date.now()-t>ms){clearInterval(iv);rej({code:"timeout"})}},200)})}
+$("#zones").addEventListener("change",e=>{
   const no=e.target.dataset.photo,files=[...(e.target.files||[])];if(!no||!files.length)return;
-  if(!ready){toast("Chưa kết nối máy chủ, thử lại sau.");e.target.value="";return}
   if(!S.mst){toast("Chọn siêu thị trước khi chụp/chọn ảnh.");e.target.value="";return}
-  const sp=e.target.parentElement.querySelector("span"),label=sp.textContent;
-  let ok=0,fail=0;
-  for(const [i,f] of files.slice(0,5).entries()){            // tối đa 5 ảnh mỗi lần chọn
-    sp.textContent=files.length>1?`Đang tải ${i+1}/${Math.min(files.length,5)}...`:"Đang tải ảnh...";
-    try{
-      const {blob,type,ext}=await prepImage(f);
-      const path=`tam/${vnDate()}/${S.mst}/c${no}-${uid8()}.${ext}`;
-      const ref=st.ref(path);
-      let snap;try{snap=await withTimeout(ref.put(blob,{contentType:type}),45000)}catch(err){await sleep(1500);snap=await withTimeout(ref.put(blob,{contentType:type}),45000)}
-      const u=await snap.ref.getDownloadURL();
-      BLOBS[path]={blob,type};
-      const a=S.ans[no];(a.imgs||(a.imgs=[])).push({u,p:path});ok++;
-    }catch(err){console.warn(err);fail++;if(err&&err.code==="toobig")toast("Ảnh quá lớn và máy không nén được. Chọn ảnh khác hoặc chụp trực tiếp.")}
-  }
-  e.target.value="";sp.textContent=label;saveDraft();renderZones();
-  if(fail&&!ok)toast("Mạng yếu hoặc ảnh lỗi, chưa tải được. Thử lại.");
-  else if(fail)toast(`Đã tải ${ok} ảnh, ${fail} ảnh lỗi.`);
+  const a=S.ans[no]||(S.ans[no]={v:"bad"});a.imgs=a.imgs||[];
+  files.slice(0,5).forEach(f=>{                 // hiện ảnh ngay, tải lên chạy nền
+    const tmp=uid8();FILES[tmp]={f,mst:S.mst,day:vnDate()};
+    a.imgs.push({tmp,local:URL.createObjectURL(f),st:"up"});
+    UP[tmp]=uploadOne(no,tmp);
+  });
   if(files.length>5)toast("Mỗi lần chọn tối đa 5 ảnh.");
+  e.target.value="";refreshQ(no);
 });
+async function uploadOne(no,tmp){
+  const job=FILES[tmp];
+  const find=()=>((S.ans[no]||{}).imgs||[]).find(x=>x.tmp===tmp);
+  try{
+    if(!job)return;
+    await waitReady();
+    const {blob,type,ext}=await prepImage(job.f);
+    const path=`tam/${job.day}/${job.mst}/c${no}-${uid8()}.${ext}`,ref=st.ref(path);
+    let snap;try{snap=await withTimeout(ref.put(blob,{contentType:type}),40000)}catch(err){await sleep(1200);snap=await withTimeout(ref.put(blob,{contentType:type}),40000)}
+    const u=await snap.ref.getDownloadURL();
+    BLOBS[path]={blob,type};
+    const im=find();if(im){im.u=u;im.p=path;delete im.st;delete im.tmp}delete FILES[tmp];
+    saveDraft();refreshQ(no);
+  }catch(err){console.warn(err);const im=find();if(im)im.st="err";refreshQ(no);
+    toast(err&&err.code==="toobig"?"Ảnh quá lớn, máy không nén được. Chọn ảnh khác hoặc chụp trực tiếp.":"Ảnh chưa tải lên được (mạng yếu). Chạm vào ảnh đỏ để thử lại.")}
+  finally{delete UP[tmp]}
+}
 // Nén ảnh về JPEG ~1024px. Ảnh máy không đọc được (vd HEIC trên một số Android) thì gửi nguyên bản nếu < 3MB.
 async function prepImage(f){
+  if(f.type==="image/jpeg"&&f.size<350*1024)return {blob:f,type:"image/jpeg",ext:"jpg"};   // đã nhỏ → gửi thẳng
   try{const b=await shrink(f);return {blob:b,type:"image/jpeg",ext:"jpg"}}
   catch(e){
     if(f.size<3*1024*1024&&/^image\//.test(f.type||"image/heic")){const t=f.type||"image/heic";return {blob:f,type:t,ext:(t.split("/")[1]||"img").replace("jpeg","jpg")}}
@@ -562,7 +614,16 @@ async function keepPhotos(){ // lượt LIỆT hoặc dưới 45đ: chép ảnh 
         im.u=await sn.ref.getDownloadURL();im.p=np}catch(e){console.warn("keepPhotos",e)}}}
   saveDraft();
 }
-function shrink(file){return new Promise((res,rej)=>{
+async function shrink(file){
+  if(window.createImageBitmap){try{
+    const bm=await createImageBitmap(file,{imageOrientation:"from-image"});
+    const k=Math.min(1,1024/Math.max(bm.width,bm.height)),c=document.createElement("canvas");
+    c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext("2d").drawImage(bm,0,0,c.width,c.height);bm.close&&bm.close();
+    return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("blob")),"image/jpeg",0.7));
+  }catch(e){}}
+  return shrinkImg(file);
+}
+function shrinkImg(file){return new Promise((res,rej)=>{
   const img=new Image(),url=URL.createObjectURL(file);
   img.onload=()=>{const M=1024,s=Math.min(1,M/Math.max(img.width,img.height));
     const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
@@ -584,16 +645,17 @@ function validate(){
   const miss=[];document.querySelectorAll(".q.missing").forEach(x=>x.classList.remove("missing"));
   for(const no in QMAP){const a=S.ans[no];
     if(!a||!a.v){miss.push(no);continue}
-    if(a.v==="bad"&&!(a.imgs||[]).length)miss.push(no)}
+    if(a.v==="bad"&&!(a.imgs||[]).some(x=>x.u))miss.push(no)}
   if(miss.length){miss.forEach(n=>$("#q"+n).classList.add("missing"));
     return {msg:`Còn ${miss.length} câu chưa chấm hoặc thiếu ảnh đối soát (câu ${miss.slice(0,6).join(", ")}${miss.length>6?"…":""})`,el:$("#q"+miss[0])}}
   return null;
 }
+function pendingPhotos(){return Object.keys(S.ans).filter(n=>S.ans[n].v==="bad"&&(S.ans[n].imgs||[]).some(x=>x.st))}
 function buildJob(){
   const c=calc(),now=Date.now(),day=vnDate(),ym=day.slice(0,7),s=BYMST[S.mst],lc=lietCounts();
   const code=v=>v==="ok"?"ok":v==="bad"?"error":"na";
   const ans=Object.keys(QMAP).map(n=>code((S.ans[n]||{}).v));
-  const loi=Object.keys(S.ans).filter(n=>S.ans[n].v==="bad").map(n=>({q:+n,note:(S.ans[n].note||"").trim(),imgs:(S.ans[n].imgs||[]).map(x=>({u:x.u,p:x.p})),
+  const loi=Object.keys(S.ans).filter(n=>S.ans[n].v==="bad").map(n=>({q:+n,note:(S.ans[n].note||"").trim(),imgs:(S.ans[n].imgs||[]).filter(x=>x.u).map(x=>({u:x.u,p:x.p})),
     tru:QMAP[n].pts}));
   const ok=Object.keys(S.ans).filter(n=>S.ans[n].v==="ok").map(Number);
   const isQ=S.cv==="QLST";
@@ -612,11 +674,32 @@ function buildJob(){
   loi.forEach(l=>patch.loi["q"+l.q]={[dk(day)]:l.imgs});
   return {col:isQ?"qlst":"kt",id,rec,sumId:`${ym}_${s.mst}`,patch,isQ};
 }
+function showDone(rec,state){
+  const loi=(rec.loi||[]).slice().sort((a,b)=>a.q-b.q);
+  const st={ok:["✅ ĐÃ GỬI THÀNH CÔNG","ok"],wait:["⏳ ĐÃ LƯU TRÊN MÁY – CHỜ CÓ MẠNG SẼ TỰ GỬI","warn"]}[state];
+  const el=$("#doneCard");el.hidden=false;
+  el.innerHTML=`<div class="done ${st[1]}">
+    <div class="done-h"><b>${st[0]}</b><button type="button" class="ghost sm" id="doneClose">Đóng</button></div>
+    <div class="done-shop">${esc(rec.mst)} · ${esc(shortName(rec.ten))}</div>
+    <div class="note">${esc(rec.nguoi)} · ${esc(rec.cv)}${rec.manv?" "+esc(rec.manv):""} · ${esc(rec.ht)} · ${new Date(rec.at).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour12:false})}</div>
+    <div class="done-score"><span class="big ${rec.liet?"c-bad":rec.diem<LOW?"c-bad":rec.diem>=90?"c-ok":"c-warn"}">${rec.diem}</span><span>/100 điểm</span>
+      ${rec.liet?`<span class="tag-liet" style="font-size:13px;padding:3px 10px">LIỆT · câu ${rec.lietQ.join(", ")}</span>`:""}</div>
+    <div class="done-sum">${loi.length?`Sai <b>${loi.length}</b> tiêu chí · bị trừ <b>${100-rec.diem}</b> điểm`:"Không có lỗi – đạt tuyệt đối 👍"}</div>
+    ${loi.length?`<table class="done-t"><tbody>${loi.map(l=>{const q=QMAP[l.q];return `<tr><td class="q-no">${l.q}</td><td>${esc(q.zone)} · ${esc(q.text)}${q.liet?'<span class="tag-liet">LIỆT</span>':""}${l.note?`<div class="note">→ ${esc(l.note)}</div>`:""}</td><td class="n c-bad">−${l.tru}</td></tr>`}).join("")}</tbody></table>`:""}
+  </div>`;
+  store.set("cham_last",{rec:{...rec,ts:null,t0:null,hetHan:null},state,day:vnDate()});
+  el.scrollIntoView({behavior:"smooth",block:"start"});
+}
+document.addEventListener("click",e=>{if(e.target.id==="doneClose"){$("#doneCard").hidden=true;store.set("cham_last",null)}});
 function pend(){return store.get("cham_pending",[])}
 function setPend(a){store.set("cham_pending",a);renderPend()}
 function renderPend(){const p=pend(),n=$("#pendNotice");n.hidden=!p.length;
   if(p.length)n.innerHTML=`<b>${p.length} lượt chấm đang chờ gửi</b> (${p.map(x=>x.mst).join(", ")}). Kết quả đã lưu trên máy, sẽ tự gửi khi có mạng — không cần chấm lại, đừng xoá dữ liệu trình duyệt.`}
 $("#btnSubmit").addEventListener("click",async()=>{
+  if(Object.keys(UP).length){const btn=$("#btnSubmit");btn.disabled=true;btn.textContent="Đang chờ ảnh tải xong...";
+    await Promise.allSettled(Object.values(UP));btn.disabled=false;btn.textContent="Gửi kết quả"}
+  const pp=pendingPhotos();
+  if(pp.length){toast(`Ảnh câu ${pp.join(", ")} chưa tải lên được — chạm vào ảnh đỏ để thử lại hoặc xoá chụp lại.`);$("#q"+pp[0]).scrollIntoView({behavior:"smooth",block:"center"});return}
   const v=validate();
   if(v){toast(v.msg);v.el&&v.el.scrollIntoView({behavior:"smooth",block:"center"});return}
   if(!ready){toast("Chưa kết nối máy chủ. Kiểm tra mạng rồi mở lại trang.");return}
@@ -636,10 +719,10 @@ $("#btnSubmit").addEventListener("click",async()=>{
     await withTimeout(commit,15000);
     if(job.isQ){curRec={...job.rec,t0:null};doneMap[job.rec.mst]=curRec}
     toast(`Đã gửi ${job.rec.mst}: ${job.rec.diem} điểm${job.rec.liet?" · LIỆT – xử lý ngay":""}`);
-    clear();loadShopState();
+    clear();showDone(job.rec,"ok");loadShopState();
   }catch(e){
     if(e&&e.code==="timeout"){ // Firestore giữ lượt trên máy và tự gửi khi có mạng
-      setPend([...pend(),{id:job.id,mst:job.rec.mst}]);clear();toast("Mạng yếu: đã lưu trên máy, sẽ tự gửi khi có mạng.");
+      setPend([...pend(),{id:job.id,mst:job.rec.mst}]);clear();showDone(job.rec,"wait");toast("Mạng yếu: đã lưu trên máy, sẽ tự gửi khi có mạng.");
       commit.then(()=>{setPend(pend().filter(x=>x.id!==job.id));toast(`Đã gửi xong lượt chờ ${job.rec.mst}`)}).catch(err=>{setPend(pend().filter(x=>x.id!==job.id));toast(`Lượt ${job.rec.mst} bị từ chối: ${err.code==="permission-denied"?"shop đã khoá chấm hôm nay":"lỗi máy chủ"}`)});
     }else if(e&&e.code==="permission-denied"){toast("Không gửi được: shop đã có lượt chấm quá 10 phút, hoặc dữ liệu không hợp lệ.");loadShopState()}
     else{console.warn(e);toast("Gửi chưa được, thử lại sau ít giây.")}
@@ -684,17 +767,32 @@ try{const v=localStorage.getItem("cham_sort");if(v)$("#kqSort").value=v}catch(e)
 $("#kqMode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;kqMode=b.dataset.v;
   document.querySelectorAll("#kqMode button").forEach(x=>x.setAttribute("aria-pressed",x===b));loadKQ()});
 $("#kqBody").addEventListener("click",e=>{
+  const lt=e.target.closest("#listTg");if(lt){LIST_HIDE=!LIST_HIDE;$("#listBox").hidden=LIST_HIDE;lt.textContent=LIST_HIDE?"▸ Hiện":"▾ Ẩn";lt.setAttribute("aria-expanded",!LIST_HIDE);try{localStorage.setItem("cham_listhide",LIST_HIDE?"1":"")}catch(_){}return}
   const b=e.target.closest("#kqSub button");if(b){kqList=b.dataset.v;loadKQ();return}
   const t=e.target.closest("#thSub button");if(t){thList=t.dataset.v;loadKQ();return}
   const oa=e.target.closest("button[data-openall]");
   if(oa){const on=oa.dataset.openall==="1",tb=oa.closest(".tbl2h").nextElementSibling;
     tb.querySelectorAll("tr.grp").forEach(g=>{OPEN[g.dataset.g]=on;g.querySelector(".arr").textContent=on?"▾":"▸"});
     tb.querySelectorAll("tr.ch").forEach(r=>r.hidden=!on);return}
+  const rx=e.target.closest("tr.rowx[data-det]");
+  if(rx&&!e.target.closest("a")){const d=document.getElementById(rx.dataset.det);d.hidden=!d.hidden;const a=rx.querySelector(".arr");if(a)a.textContent=d.hidden?"▸":"▾";return}
   const g=e.target.closest("tr.grp[data-g]");
-  if(g){const k=g.dataset.g;OPEN[k]=!OPEN[k];g.querySelector(".arr").textContent=OPEN[k]?"▾":"▸";
-    g.closest("tbody").querySelectorAll("tr.ch").forEach(r=>{if(r.dataset.p===k)r.hidden=!OPEN[k]})}
+  if(g){const k=g.dataset.g;OPEN[k]=!OPEN[k];const a=g.querySelector(".arr");if(a)a.textContent=OPEN[k]?"▾":"▸";
+    const b=g.querySelector(".tg");if(b)b.setAttribute("aria-expanded",OPEN[k]);
+    g.closest("tbody").querySelectorAll("tr.ch").forEach(r=>{if(r.dataset.p===k)r.hidden=!OPEN[k]});return}
+  const mr=e.target.closest("button[data-morerows]");
+  if(mr){const rows=document.querySelectorAll(`tr[data-mr="${mr.dataset.morerows}"]`),open=rows.length&&rows[0].hidden;
+    rows.forEach(r=>{if(r.classList.contains("det")){if(!open)r.hidden=true}else r.hidden=!open});mr.textContent=open?"Thu gọn":mr.dataset.label;return}
+  const mb=e.target.closest("button[data-more]");
+  if(mb){const box=document.getElementById(mb.dataset.more),open=box.hidden;box.hidden=!open;
+    mb.textContent=open?"Thu gọn":mb.dataset.label;return}
   const a=e.target.closest("button[data-all]");if(a){showAll[a.dataset.all]=!showAll[a.dataset.all];loadKQ()}
 });
+const REC_HEAD=["MST",{h:"Siêu thị"},{h:"Điểm",r:1},{h:"Số lỗi",r:1},{h:"Câu lỗi"},{h:"QLTP"},{h:"Người chấm"},{h:"Hình thức"},{h:"Giờ"}];
+function recRow(r){const qs=(r.loi||[]).map(l=>l.q);
+  return rowDet([esc(r.mst),TX(esc(shortName(r.ten))),TN(`${r.liet?'<span class="tag-liet" style="margin:0 4px 0 0">LIỆT</span>':""}${r.diem}`,r.liet||r.diem<LOW?"c-bad":r.diem>=90?"c-ok":""),TN(D((r.loi||[]).length)),TL(qs.join(", ")||"-"),
+    TL(esc(r.qltp)),TL(`${esc(r.nguoi||"")} <span class="note">${esc(r.cv)}</span>`),TL(esc(r.ht)),TL(vnTime(r.at))],
+    loiHTML(r),r.liet?"liet-row":"",9)}
 function pillCls(r){return r.liet?"liet":r.diem<LOW?"low":r.diem>=90?"good":"mid"}
 function kpis(items){return `<div class="kpis">${items.map(([v,k,bad])=>`<div class="kpi ${bad?"bad":""}"><div class="v">${v}</div><div class="k">${esc(k)}</div></div>`).join("")}</div>`}
 function table(head,rows){return `<div class="tblwrap"><table><thead><tr>${head.map((h,i)=>`<th${i?' style="text-align:right"':""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`}
@@ -726,21 +824,40 @@ function sortG(list){
   return list.slice().sort(by[m]||by.ten);
 }
 function pctCls(a,b){if(!b||!a)return "muted";const p=a*100/b;return p<80?"c-bad":p<100?"c-warn":"c-ok"}
+let LIST_HIDE=false;try{LIST_HIDE=!!localStorage.getItem("cham_listhide")}catch(_){}
 const OPEN={};                                             // RSM đang mở trong Bảng 2
 function grpAttr(cls,key,pkey){
   if(cls==="grp")return ` data-g="${esc(key)}" title="Bấm để ẩn/hiện QLTP"`;
   if(pkey!=null)return ` data-p="${esc(pkey)}"${OPEN[pkey]?"":" hidden"}`;
   return "";
 }
-const arrow=k=>`<span class="arr">${OPEN[k]?"▾":"▸"}</span> `;
+const arrow=k=>`<button type="button" class="tg" data-tg="${esc(k)}" aria-expanded="${!!OPEN[k]}"><span class="arr">${OPEN[k]?"▾":"▸"}</span></button>`;
 function statRow(g,cls,pkey){
   const d=g.q.length,key=kqMode+"|"+g.name;
   return `<tr class="${cls}${pkey!=null?" ch":""}"${grpAttr(cls,key,pkey)}><td>${cls==="grp"?arrow(key):""}${esc(g.name)}</td><td class="n">${D(g.n)}</td><td class="n">${D(d)}</td>
     <td class="n ${pctCls(d,g.n)}">${P(d,g.n)}</td><td class="n">${f1(avg(g.q))}</td><td class="n">${D(g.k.length)}</td><td class="n">${f1(avg(g.k))}</td>
     <td class="n ${g.liet?"c-bad":""}">${D(g.liet)}</td><td class="n ${g.low?"c-bad":""}">${D(g.low)}</td><td class="n ${g.n-d?"c-warn":""}">${D(g.n-d)}</td></tr>`;
 }
+let MORE_ID=0;
+function moreList(items,empty,n=10){           // hiện n mục đầu, phần còn lại ẩn — bấm để bung
+  if(!items.length)return empty;
+  if(items.length<=n)return items.join("");
+  const id="more"+(++MORE_ID),label=`Xem thêm ${items.length-n} / tổng ${items.length}`;
+  return items.slice(0,n).join("")+`<div id="${id}" hidden>${items.slice(n).join("")}</div><button type="button" class="ghost more-btn" data-more="${id}" data-label="${label}">${label}</button>`;
+}
+function moreTable(head,rows,empty,n=10){     // bảng: hiện n dòng đầu, bấm để bung
+  if(!rows.length)return empty;
+  if(rows.length<=n)return tableRaw(head,rows);
+  const id="more"+(++MORE_ID),label=`Xem thêm ${rows.length-n} / tổng ${rows.length}`;
+  return tableRaw(head,rows.map((r,i)=>i<n?r:r.replace(/<tr/g,`<tr data-mr="${id}" hidden`)))+`<button type="button" class="ghost more-btn" data-morerows="${id}" data-label="${label}">${label}</button>`;
+}
 function tbl2Title(t){return `<div class="tbl2h"><h3 class="tbl-title">${t}</h3><span class="tbl2b"><button type="button" class="ghost sm" data-openall="1">Mở tất cả</button><button type="button" class="ghost sm" data-openall="0">Thu gọn</button></span></div>`}
-function tableRaw(head,rows){return `<div class="tblwrap"><table class="stat"><thead><tr>${head.map((h,i)=>`<th${i?' style="text-align:right"':""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`}
+function tableRaw(head,rows){return `<div class="tblwrap"><table class="stat"><thead><tr>${head.map((h,i)=>{const o=typeof h==="string"?{h,r:i>0}:h;return `<th${o.r?' style="text-align:right"':""}>${esc(o.h)}</th>`}).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`}
+/* dòng bấm để bung chi tiết (ảnh, ghi chú) ngay bên dưới */
+let DET_ID=0;
+function rowDet(cells,detail,cls,ncol){const id="d"+(++DET_ID);
+  return `<tr class="rowx ${cls||""}" data-det="${id}"><td><span class="arr">▸</span>${cells[0]}</td>${cells.slice(1).join("")}</tr><tr class="det" id="${id}" hidden><td colspan="${ncol}"><div class="detbox">${detail}</div></td></tr>`}
+const TX=v=>`<td class="tx">${v}</td>`,TN=(v,c)=>`<td class="n ${c||""}">${v}</td>`,TL=v=>`<td>${v}</td>`;
 function statTable(first,list,tot){return tableRaw([first,...STAT_HEAD],list.map(g=>statRow(g,"")).concat(tot?[statRow(tot,"tot")]:[]))}
 function renderNgay(day,dAll,kAll){
   const act=ACTIVE.filter(s=>s.khaiTruong<=day&&flt(s)),recs=dAll.filter(flt),kts=kAll.filter(flt);
@@ -768,14 +885,16 @@ function renderNgay(day,dAll,kAll){
   h+=tbl2Title("Bảng 2 · QLTP theo RSM")+tableRaw(["QLTP / RSM",...STAT_HEAD],rows2);
   const tabs=[["liet",`LIỆT & dưới ${LOW}đ`],["kt","Lượt QLTP/RSM/chéo"],["miss","Chưa chấm"],["top","Lỗi nhiều nhất"]];
   if(!tabs.some(t=>t[0]===kqList))kqList="liet";
+  h+=`<div class="tbl2h"><h3 class="tbl-title">Cảnh báo & danh sách chi tiết</h3><span class="tbl2b"><button type="button" class="ghost sm" id="listTg" aria-expanded="${!LIST_HIDE}">${LIST_HIDE?"▸ Hiện":"▾ Ẩn"}</button></span></div><div id="listBox"${LIST_HIDE?" hidden":""}>`;
   h+=`<div class="subtabs" id="kqSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${kqList===v}">${t}</button>`).join("")}</div>`;
   const sortS=(a,b)=>(a.liet?a.diem-1000:a.diem)-(b.liet?b.diem-1000:b.diem);
-  if(kqList==="miss")h+=miss.length?`<div class="miss">${miss.sort((a,b)=>(a.qltp+a.mst).localeCompare(b.qltp+b.mst,"vi",{numeric:true})).map(s=>`<span class="m">${esc(s.mst)}</span><span>${esc(shortName(s.ten))} <span class="note">· ${esc(s.qltp)}</span></span>`).join("")}</div>`:`<div class="empty">Tất cả shop đã chấm.</div>`;
+  if(kqList==="miss")h+=moreTable(["MST",{h:"Siêu thị"},{h:"QLTP"},{h:"RSM"}],miss.sort((a,b)=>(a.rsm+a.qltp+a.mst).localeCompare(b.rsm+b.qltp+b.mst,"vi",{numeric:true})).map(s=>`<tr>${TL(esc(s.mst))}${TX(esc(shortName(s.ten)))}${TL(esc(s.qltp))}${TL(esc(s.rsm))}</tr>`),`<div class="empty">Tất cả shop đã chấm.</div>`);
   else if(kqList==="top"){const all=recs.concat(kts),cnt={};all.forEach(r=>(r.loi||[]).forEach(l=>cnt[l.q]=(cnt[l.q]||0)+1));
     const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
-    h+=top.length?table(["Câu","Nội dung","Số lượt","% lượt chấm"],top.map(([n,c])=>`<tr><td class="n" style="text-align:left">${n}</td><td style="white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n">${c}</td><td class="n">${pct(c,all.length)}%</td></tr>`)):`<div class="empty">Chưa có lỗi nào.</div>`}
+    h+=top.length?moreTable(["Câu",{h:"Nội dung"},{h:"Số lượt",r:1},{h:"% lượt chấm",r:1}],top.map(([n,c])=>`<tr><td class="n" style="text-align:left">${n}</td><td style="white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n">${c}</td><td class="n">${pct(c,all.length)}%</td></tr>`)):`<div class="empty">Chưa có lỗi nào.</div>`}
   else{const list=(kqList==="kt"?kts.slice():recs.concat(kts).filter(r=>r.liet||r.diem<LOW)).sort(sortS);
-    h+=list.length?list.slice(0,200).map(r=>shopCard(r)).join("")+(list.length>200?`<p class="hint">Hiển thị 200/${list.length} — lọc RSM/QLTP để xem thêm.</p>`:""):`<div class="empty">Không có lượt ${kqList==="kt"?"QLTP/RSM/chéo":`LIỆT hoặc dưới ${LOW}đ`} ngày ${dmy(day)}.</div>`}
+    h+=moreTable(REC_HEAD,list.map(recRow),`<div class="empty">Không có lượt ${kqList==="kt"?"QLTP/RSM/chéo":`LIỆT hoặc dưới ${LOW}đ`} ngày ${dmy(day)}.</div>`)}
+  h+=`</div>`;
   $("#kqBody").innerHTML=h;
 }
 
@@ -833,11 +952,11 @@ function renderThang(ym,sums){
   h+=`<div class="subtabs" id="thSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${thList===v}">${t}</button>`).join("")}</div>`;
   const ord=(x,y)=>(x.s.rsm+x.s.qltp+x.s.mst).localeCompare(y.s.rsm+y.s.qltp+y.s.mst,"vi",{numeric:true});
   if(thList==="qlst"){const l=items.filter(r=>r.need&&r.done<r.need).sort(ord);
-    h+=l.length?tableRaw(["MST","Siêu thị","QLTP","Đã chấm","Phải chấm","Thiếu"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td class="n">${D(r.done)}</td><td class="n">${r.need}</td><td class="n c-bad">${r.need-r.done}</td></tr>`))
-      :`<div class="empty">${started?"Không có shop thiếu ngày chấm.":"Chưa tới ngày mốc."}</div>`}
+    h+=moreTable(["MST","Siêu thị","QLTP","Đã chấm","Phải chấm","Thiếu"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td class="n">${D(r.done)}</td><td class="n">${r.need}</td><td class="n c-bad">${r.need-r.done}</td></tr>`),
+      `<div class="empty">${started?"Không có shop thiếu ngày chấm.":"Chưa tới ngày mốc."}</div>`)}
   else{const l=items.filter(r=>!r.ktQ.length).sort(ord);
-    h+=l.length?tableRaw(["MST","Siêu thị","QLTP","RSM"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td style="text-align:right">${esc(r.s.rsm)}</td></tr>`))
-      :`<div class="empty">Tất cả shop đã được QLTP chấm trong tháng.</div>`}
+    h+=moreTable(["MST","Siêu thị","QLTP","RSM"],l.map(r=>`<tr><td>${esc(r.s.mst)}</td><td style="text-align:right;white-space:normal">${esc(shortName(r.s.ten))}</td><td style="text-align:right">${esc(r.s.qltp)}</td><td style="text-align:right">${esc(r.s.rsm)}</td></tr>`),
+      `<div class="empty">Tất cả shop đã được QLTP chấm trong tháng.</div>`)}
   $("#kqBody").innerHTML=h;
 }
 
@@ -859,7 +978,7 @@ function renderLap(ym,sums){
   // theo tiêu chí
   const byQ={};open.forEach(o=>(byQ[o.x.no]||(byQ[o.x.no]={o:0,f:0})).o++);fixed.forEach(o=>(byQ[o.x.no]||(byQ[o.x.no]={o:0,f:0})).f++);
   const qs=Object.entries(byQ).sort((a,b)=>b[1].o-a[1].o||a[0]-b[0]);
-  h+=`<h3 class="tbl-title">Bảng 3 · Tiêu chí lặp lại</h3>`+(qs.length?tableRaw(["Câu","Nội dung","Đang mở","Đã gỡ"],qs.map(([n,v])=>`<tr><td>${n}</td><td style="text-align:left;white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n ${v.o?"c-bad":""}">${D(v.o)}</td><td class="n ${v.f?"c-ok":""}">${D(v.f)}</td></tr>`)):`<div class="empty">Không có tiêu chí lặp lại.</div>`);
+  h+=`<h3 class="tbl-title">Bảng 3 · Tiêu chí lặp lại</h3>`+(qs.length?tableRaw(["Câu",{h:"Nội dung"},{h:"Đang mở",r:1},{h:"Đã gỡ",r:1}],qs.map(([n,v])=>`<tr><td>${n}</td><td style="text-align:left;white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n ${v.o?"c-bad":""}">${D(v.o)}</td><td class="n ${v.f?"c-ok":""}">${D(v.f)}</td></tr>`)):`<div class="empty">Không có tiêu chí lặp lại.</div>`);
   // chi tiết kèm ảnh
   const card=({s,x},isOpen)=>{const qq=QMAP[x.no];return `<details class="shop ${isOpen?"is-liet":""}"><summary>
     <div style="min-width:0"><div class="nm">${esc(s.mst)} · ${esc(shortName(s.ten))}</div>
@@ -868,8 +987,13 @@ function renderLap(ym,sums){
     <div class="body"><div>${esc(qq.text)}</div>
     <div class="note">Ngày lỗi: ${x.days.map(dmy).join(", ")}${x.clr?` · Cấp trên chấm lại đạt: ${dmy(x.clr)}`:""}</div>
     ${x.imgs.length?`<div class="thumbs">${x.imgs.slice(0,12).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi câu ${x.no}" loading="lazy"></a>`).join("")}</div>`:""}</div></details>`};
-  h+=`<h3 class="tbl-title">Chi tiết cảnh báo đang mở (bấm để xem ảnh)</h3>`+(open.length?open.sort((a,b)=>(a.s.rsm+a.s.qltp).localeCompare(b.s.rsm+b.s.qltp,"vi")||b.x.after.length-a.x.after.length).map(o=>card(o,true)).join(""):`<div class="empty">Không có cảnh báo đang mở.</div>`);
-  if(fixed.length)h+=`<h3 class="tbl-title">Đã khắc phục</h3>`+fixed.map(o=>card(o,false)).join("");
+  const LH=["MST",{h:"Siêu thị"},{h:"Câu"},{h:"Số lần",r:1},{h:"Nội dung"},{h:"Ngày lỗi"},{h:"Ngày gỡ"},{h:"QLTP"}];
+  const lrow=({s,x},isOpen)=>{const qq=QMAP[x.no];
+    return rowDet([esc(s.mst),TX(esc(shortName(s.ten))),TL(`${x.no}${qq.liet?' <span class="tag-liet">LIỆT</span>':""}`),TN(D(isOpen?x.after.length:x.days.length),isOpen?"c-bad":""),TX(esc(qq.text)),
+      TX(x.days.map(d=>dmy(d).slice(0,5)).join(", ")),TL(x.clr?dmy(x.clr):"-"),TL(esc(s.qltp))],
+      x.imgs.length?`<div class="thumbs">${x.imgs.slice(0,12).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi câu ${x.no}" loading="lazy"></a>`).join("")}</div>`:`<div class="note">Không có ảnh.</div>`,"",8)};
+  h+=`<h3 class="tbl-title">Bảng 4 · Chi tiết cảnh báo đang mở (bấm dòng để xem ảnh)</h3>`+moreTable(LH,open.sort((a,b)=>(a.s.rsm+a.s.qltp).localeCompare(b.s.rsm+b.s.qltp,"vi")||b.x.after.length-a.x.after.length).map(o=>lrow(o,true)),`<div class="empty">Không có cảnh báo đang mở.</div>`);
+  if(fixed.length)h+=`<h3 class="tbl-title">Bảng 5 · Đã khắc phục</h3>`+moreTable(LH,fixed.map(o=>lrow(o,false)),"");
   $("#kqBody").innerHTML=h;
 }
 
@@ -939,7 +1063,9 @@ $("#exLoi").addEventListener("click",e=>runExport("loi",e.currentTarget));
 $("#exMonth").addEventListener("click",e=>runExport("month",e.currentTarget));
 
 /* ================== KHỞI ĐỘNG ================== */
+$("#verLbl").textContent="Phiên bản cập nhật: "+APP_VER;
 renderAll();renderPickers();renderPend();
+{const L=store.get("cham_last",null);if(L&&L.day===vnDate()&&L.rec)showDone(L.rec,pend().some(x=>x.id===L.rec.id)?"wait":L.state==="wait"?"ok":L.state)}
 try{if(localStorage.getItem("cham_tab")==="kq")showTab("kq")}catch(e){}
 setInterval(renderDup,30000);
 // 1) Danh sách shop lưu trên máy → hiện ngay, không chờ mạng
