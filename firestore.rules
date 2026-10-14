@@ -1,0 +1,55 @@
+rules_version = '2';
+// Quy tắc bảo mật Firestore cho web chấm trải nghiệm khách hàng.
+// Dán toàn bộ nội dung này vào Firebase Console → Firestore Database → Rules → Publish.
+// Dọn dữ liệu cũ do Firestore TTL tự làm trên trường 'hetHan' (lượt LIỆT / dưới 45đ không có hetHan → giữ lâu dài).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function d() { return request.resource.data; }
+    function validRecord() {
+      return d().diem is int && d().diem >= 0 && d().diem <= 100
+        && d().mst is string && d().ngay is string && d().ngay.size() == 10
+        && d().cv in ['QLST', 'QLTP', 'RSM']
+        && d().ht in ['Hằng ngày', 'Chấm chéo', 'Camera']
+        && d().ts == request.time
+        && d().ans is list && d().ans.size() == 26;
+    }
+
+    // Danh sách shop + ngày mốc: web chỉ đọc. Apps Script (22h) ghi bằng quyền chủ dự án.
+    match /config/{doc} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Lượt QLST: mỗi shop 1 bản ghi/ngày (id = ngày_MST).
+    // Được ghi đè trong 10 phút đầu, sau đó khoá cứng ở phía máy chủ.
+    match /qlst/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validRecord() && d().cv == 'QLST'
+        && id == d().ngay + '_' + d().mst
+        && d().t0 == request.time;
+      // t0 = thời điểm gửi lần đầu, giữ nguyên khi gửi lại → cửa sổ 10 phút không bị kéo dài.
+      allow update: if signedIn() && validRecord() && d().cv == 'QLST'
+        && id == d().ngay + '_' + d().mst
+        && d().t0 == resource.data.t0
+        && request.time < resource.data.t0 + duration.value(10, 'm');
+      allow delete: if false;
+    }
+
+    // Lượt QLTP / RSM / chấm chéo: không giới hạn, không sửa, không xoá.
+    match /kt/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validRecord() && d().t0 == request.time;
+      allow update, delete: if false;
+    }
+
+    // Tổng hợp tháng theo shop (lỗi lặp lại, độ phủ QLTP).
+    match /thang/{id} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && d().mst is string && d().ym is string;
+      allow delete: if false;
+    }
+
+  }
+}

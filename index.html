@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b7a3b">
+<title>Chấm Trải Nghiệm Khách Hàng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+
+/* Layout: mobile-first single column; sticky score bar; zones as stacked sections; 26 questions as tap rows */
+:root{
+  --bg:#f3f6f2; --surface:#ffffff; --sunk:#e8eee6; --line:#d5ddd2;
+  --fg:#17221a; --muted:#5d6b60;
+  --brand:#0b7a3b; --brand-ink:#ffffff; --brand-soft:#dcefe2;
+  --bad:#c62a1f; --bad-soft:#fbe3e0; --ok:#1d7f45; --ok-soft:#dff2e5;
+  --warn:#a76300; --warn-soft:#fff0d6;
+  --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1611; --surface:#17211a; --sunk:#1e2a21; --line:#2c3a30;
+  --fg:#e6eee7; --muted:#9aaa9e;
+  --brand:#3fbf73; --brand-ink:#08130c; --brand-soft:#1b3424;
+  --bad:#ff6b5e; --bad-soft:#3a1c19; --ok:#4fd187; --ok-soft:#173222;
+  --warn:#f0b04a; --warn-soft:#3a2c12; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1611; --surface:#17211a; --sunk:#1e2a21; --line:#2c3a30;
+  --fg:#e6eee7; --muted:#9aaa9e;
+  --brand:#3fbf73; --brand-ink:#08130c; --brand-soft:#1b3424;
+  --bad:#ff6b5e; --bad-soft:#3a1c19; --ok:#4fd187; --ok-soft:#173222;
+  --warn:#f0b04a; --warn-soft:#3a2c12; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:0 120px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px 10px;flex-wrap:wrap}
+header.top h1{font-size:20px;font-weight:800;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header.top .sub{color:var(--muted);font-size:13px}
+.tabs{display:flex;background:var(--sunk);border-radius:999px;padding:3px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:600 13px var(--f-body);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px}
+.lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.field{display:grid;gap:5px;min-width:0}
+input[type=text],input[type=date],input[type=month],input[type=search],select,textarea{width:100%;min-width:0;font:500 15px var(--f-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+select:disabled{opacity:.6}
+textarea{min-height:56px;resize:vertical}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:600 14px var(--f-body);padding:9px 10px;border-radius:8px;cursor:pointer;min-width:90px}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.hint{font-size:13px;color:var(--muted)}
+.notice{font-size:13px;padding:10px 12px;border-radius:8px;background:var(--warn-soft);color:var(--warn)}
+.notice.bad{background:var(--bad-soft);color:var(--bad)}
+.notice.ok{background:var(--ok-soft);color:var(--ok)}
+.shopcard{display:grid;gap:2px;padding:10px 12px;border-radius:8px;background:var(--brand-soft)}
+.shopcard b{font-size:15px}
+.shopcard span{font-size:13px;color:var(--muted)}
+
+.zone{margin-top:22px}
+.zone-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;padding-inline:2px}
+.zone-h h2{font-size:16px;margin:0;font-weight:700}
+.zone-h .pts{font:700 13px var(--f-num);color:var(--muted);white-space:nowrap}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:10px;margin-bottom:8px}
+.q.err{border-color:var(--bad);background:var(--bad-soft)}
+.q.missing{outline:2px dashed var(--warn);outline-offset:2px}
+.q-top{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}
+.q-no{font:700 13px var(--f-num);color:var(--muted);padding-top:2px;min-width:22px}
+.q-text{min-width:0}
+.q-pts{font:700 14px var(--f-num);white-space:nowrap}
+.tag-liet{display:inline-block;font:800 11px var(--f-body);letter-spacing:.06em;background:var(--bad);color:#fff;padding:1px 7px;border-radius:4px;margin-left:6px;vertical-align:2px}
+.ans{display:flex;gap:6px}
+.ans button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:700 14px var(--f-body);padding:10px 6px;border-radius:8px;cursor:pointer}
+.ans button.b-ok[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.ans button.b-bad[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
+.ans button.b-na[aria-pressed="true"]{background:var(--muted);border-color:var(--muted);color:var(--surface)}
+.evi{display:grid;gap:8px}
+.evi .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.photo-btn{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--bad);color:var(--bad);background:var(--surface);font:700 14px var(--f-body);padding:10px 14px;border-radius:8px;cursor:pointer}
+.photo-btn input{position:absolute;width:1px;height:1px;opacity:0}
+.req{font-size:12px;font-weight:700;color:var(--bad)}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs .t{position:relative}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block;background:var(--sunk)}
+.thumbs .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);font:700 12px var(--f-body);cursor:pointer}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:5}
+.bar-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.score{display:flex;align-items:baseline;gap:6px}
+.score b{font:700 30px var(--f-num);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.score span{color:var(--muted);font:500 13px var(--f-num)}
+.status{font-size:12px;color:var(--muted);line-height:1.3;min-width:0;flex:1}
+.status .liet{color:var(--bad);font-weight:800;font-size:13px}
+.primary{border:0;background:var(--brand);color:var(--brand-ink);font:700 15px var(--f-body);padding:12px 18px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.primary:disabled{opacity:.5;cursor:not-allowed}
+.ghost{border:1px solid var(--line);background:transparent;color:var(--fg);font:600 14px var(--f-body);padding:9px 14px;border-radius:8px;cursor:pointer}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;z-index:9;max-width:calc(100% - 32px)}
+
+/* results */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:4px}
+.filters .field{flex:1 1 150px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
+@media (max-width:420px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;min-width:0}
+.kpi .v{font:700 22px var(--f-num);font-variant-numeric:tabular-nums}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi.bad .v{color:var(--bad)}
+.tblwrap{overflow-x:auto;margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.n{font-family:var(--f-num);text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.subtabs{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.subtabs button{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f-body);padding:7px 12px;border-radius:999px;cursor:pointer}
+.subtabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.shop{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-top:8px;overflow:hidden}
+.shop.is-liet{border-left:5px solid var(--bad)}
+.shop summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px 14px;align-items:center}
+.shop summary::-webkit-details-marker{display:none}
+.shop .nm{font-weight:700;min-width:0}
+.shop .meta{font-size:12px;color:var(--muted)}
+.pill{font:700 13px var(--f-num);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--ok-soft);color:var(--ok)}
+.pill.mid{background:var(--warn-soft);color:var(--warn)}
+.pill.low,.pill.liet{background:var(--bad-soft);color:var(--bad)}
+.shop .body{padding:0 14px 14px;display:grid;gap:8px}
+.shop ul{margin:0;padding-left:18px;display:grid;gap:8px}
+.shop li{font-size:14px}
+.note{color:var(--muted);font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:32px 12px;border:1px dashed var(--line);border-radius:var(--r);margin-top:12px}
+.miss{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-top:8px}
+.kpi small{font-weight:500}
+h3{text-wrap:balance}
+.miss .m{font-family:var(--f-num);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Chấm Trải Nghiệm Khách Hàng</h1>
+      <div class="sub">26 tiêu chí · 100 điểm · QLST chấm 1 lượt/shop/ngày</div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-cham" aria-selected="true">Chấm</button>
+      <button role="tab" id="tab-kq" aria-selected="false">Kết quả</button>
+    </div>
+  </header>
+  <div class="notice bad" id="sysNotice" hidden></div>
+
+  <!-- ===== CHẤM ===== -->
+  <section id="view-cham">
+    <div class="panel">
+      <div class="field">
+        <span class="lbl">Chức vụ người chấm</span>
+        <div class="seg" id="seg-cv">
+          <button type="button" data-v="QLST" aria-pressed="true">QLST</button>
+          <button type="button" data-v="QLTP" aria-pressed="false">QLTP</button>
+          <button type="button" data-v="RSM" aria-pressed="false">RSM</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="lbl" for="tenNguoi">Họ tên người chấm</label><input type="text" id="tenNguoi" autocomplete="name" placeholder="VD: Nguyễn Văn A"></div>
+        <div class="field" id="f-manv" hidden><label class="lbl" for="manv">Mã nhân viên</label><input type="text" id="manv" inputmode="numeric" placeholder="Nhập mã NV"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">Hình thức chấm</span>
+        <div class="seg" id="seg-ht">
+          <button type="button" data-v="Hằng ngày" aria-pressed="true">Hằng ngày</button>
+          <button type="button" data-v="Chấm chéo" aria-pressed="false">Chấm chéo</button>
+          <button type="button" data-v="Camera" aria-pressed="false">Camera</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="lbl" for="selRsm">RSM</label><select id="selRsm"><option value="">Đang tải danh sách...</option></select></div>
+        <div class="field"><label class="lbl" for="selQltp">QLTP</label><select id="selQltp" disabled><option value="">Chọn RSM trước</option></select></div>
+      </div>
+      <div class="field"><label class="lbl" for="selShop">Siêu thị</label><select id="selShop" disabled><option value="">Chọn QLTP trước</option></select></div>
+      <div class="field"><label class="lbl" for="findMst">Hoặc tìm nhanh theo MST</label><input type="search" id="findMst" inputmode="numeric" placeholder="Gõ MST rồi bấm Enter"></div>
+      <div class="shopcard" id="shopCard" hidden></div>
+      <div class="hint" id="dateHint"></div>
+      <div class="notice" id="lietNotice" hidden>QLST chấm hằng ngày/camera: câu <b>LIỆT</b> bị lỗi vẫn <b>trừ điểm</b> nhưng lượt chấm <b>không xếp LIỆT</b>. LIỆT chỉ ghi nhận khi QLTP, RSM hoặc chấm chéo.</div>
+      <div class="notice" id="dupNotice" hidden></div>
+      <div class="notice" id="camNotice" hidden>Chấm Camera: chỉ kết luận câu quan sát rõ qua camera. Câu không đủ căn cứ chọn <b>Không xem được</b> (không trừ điểm).</div>
+      <div class="notice bad" id="repNotice" hidden></div>
+      <div class="notice" id="pendNotice" hidden></div>
+    </div>
+
+    <div id="zones"></div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="ghost" type="button" id="btnReset">Xoá kết quả đang chấm</button>
+    </div>
+  </section>
+
+  <!-- ===== KẾT QUẢ ===== -->
+  <section id="view-kq" hidden>
+    <div class="subtabs" id="kqMode" style="margin-top:4px">
+      <button type="button" data-v="ngay" aria-pressed="true">Theo ngày</button>
+      <button type="button" data-v="thang" aria-pressed="false">Báo cáo tháng</button>
+      <button type="button" data-v="lap" aria-pressed="false">Lỗi lặp lại</button>
+    </div>
+    <div class="filters">
+      <div class="field" id="fDate"><label class="lbl" for="kqDate">Ngày</label><input type="date" id="kqDate"></div>
+      <div class="field" id="fMonth" hidden><label class="lbl" for="kqMonth">Tháng</label><input type="month" id="kqMonth"></div>
+      <div class="field"><label class="lbl" for="kqRsm">RSM</label><select id="kqRsm"><option value="">Tất cả</option></select></div>
+      <div class="field"><label class="lbl" for="kqQltp">QLTP</label><select id="kqQltp"><option value="">Tất cả</option></select></div>
+      <button class="ghost" type="button" id="kqReload">Làm mới</button>
+    </div>
+    <details class="panel" id="exportBox" style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:700">Xuất dữ liệu ra Excel (CSV)</summary>
+      <div class="filters" style="margin-top:8px">
+        <div class="field"><label class="lbl" for="exFrom">Từ ngày</label><input type="date" id="exFrom"></div>
+        <div class="field"><label class="lbl" for="exTo">Đến ngày</label><input type="date" id="exTo"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ghost" type="button" id="exDetail">Tải chi tiết từng lượt</button>
+        <button class="ghost" type="button" id="exLoi">Tải danh sách lỗi</button>
+        <button class="ghost" type="button" id="exMonth">Tải tổng hợp tháng theo shop</button>
+      </div>
+      <div class="hint" id="exHint">Tối đa 31 ngày mỗi lần; lọc RSM/QLTP ở trên áp dụng cho file. Mở bằng Excel hoặc Google Sheet.</div>
+    </details>
+    <div id="kqBody"></div>
+    <p class="hint" style="margin-top:16px">Web giữ toàn bộ dữ liệu 45 ngày gần nhất; sau 45 ngày tự xoá, chỉ giữ lượt LIỆT và dưới 45 điểm (kèm ảnh) để tham chiếu. Cần lưu riêng thì dùng "Xuất dữ liệu".</p>
+  </section>
+</div>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <div class="score"><b id="scoreV">100</b><span>/100</span></div>
+    <div class="status" id="statusV">Đã chấm 0/26 câu</div>
+    <button class="primary" type="button" id="btnSubmit">Gửi kết quả</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ================== BỘ CÂU HỎI ================== */
+const Q=[
+ ["Khu vực Bãi xe",[
+  [1,"Khách vào hoặc rời bãi xe nhưng nhân viên giữ xe không giao nhận thẻ hoặc không hỗ trợ dắt xe theo quy định?",4,0],
+  [2,"Bãi xe có vật dụng ngoài danh mục được phép?",2,0],
+  [3,"Bãi xe có hàng hóa, vật dụng hoặc xe sắp xếp khiến khách khó đưa xe ra vào?",3,0],
+  [4,"Bãi xe hoặc kính mặt tiền có rác, bụi đóng lớp, vết keo, vết dơ hay mạng nhện nhìn thấy rõ?",2,0]]],
+ ["Khu vực Fresh",[
+  [5,"Có Fresh héo, mất nước, đổi màu hoặc bầm dập nhìn thấy rõ nhưng vẫn đang bán?",5,0],
+  [6,"Shop có mùi hôi tại khu vực khách hàng tiếp cận hoặc mua sắm?",8,1],
+  [7,"Có Fresh thối, mốc, nhớt, chảy dịch hoặc hư không còn khả năng sử dụng nhưng vẫn đang bán?",8,1],
+  [8,"Khu Fresh hoặc khu sơ chế có rác, thực phẩm rơi vãi, nước bẩn hoặc dụng cụ để sai vị trí?",6,0],
+  [9,"Có sản phẩm Fresh hết hạn sử dụng vẫn nằm tại khu vực bán hàng?",3,1],
+  [10,"Tủ thịt hoặc showcase có máu, dịch, cặn hay vết dơ ở phía khách nhìn thấy?",3,0]]],
+ ["Khu vực FMCG",[
+  [11,"Có từ ba SKU liền kề không có bảng giá tại đúng vị trí trưng bày?",5,0],
+  [12,"Có một đoạn kệ FMCG xuất hiện từ ba vị trí trống liên tiếp nhưng chưa được dồn hoặc bổ sung hàng?",5,0],
+  [13,"Có sản phẩm FMCG hết hạn sử dụng vẫn nằm tại khu vực bán hàng?",3,1],
+  [14,"Có sản phẩm FMCG rách, bung hoặc biến dạng nhưng vẫn đang trưng bày để bán?",2,0],
+  [15,"Kệ FMCG hoặc góc shop có rác, bụi đóng lớp, vết dơ hay mạng nhện nhìn thấy rõ?",2,0]]],
+ ["Thu ngân và Đông mát",[
+  [16,"Có khách đứng tại vị trí thanh toán nhưng không có nhân viên tại quầy hoặc đang tiến đến tiếp nhận?",7,0],
+  [17,"Có từ ba khách chờ thanh toán nhưng shop chưa mở toàn bộ quầy có thể hoạt động và không có nhân viên hỗ trợ?",7,0],
+  [18,"Có sản phẩm Đông mát hết hạn sử dụng vẫn nằm tại khu vực bán hàng?",3,1],
+  [19,"Có sản phẩm Đông mát rách bao bì, chảy nước hoặc biến dạng nhưng vẫn đang bán?",2,0],
+  [20,"Tủ mát hoặc tủ đông có máu, dịch, cặn hay vết dơ ở phía khách nhìn thấy?",2,0],
+  [21,"Quầy thu ngân hoặc khu vực khách đứng thanh toán có rác, bụi hay vết dơ nhìn thấy rõ?",2,0]]],
+ ["Tác phong và Lối đi",[
+  [22,"Có vị trí lối đi bị thu hẹp dưới 1 mét do hàng hóa hoặc cách trưng bày?",5,0],
+  [23,"Có xe đẩy, thùng hàng hoặc dụng cụ khiến khách phải né, dừng lại hoặc không lấy được hàng?",3,0],
+  [24,"Trên lối khách đi có nước, dầu, thực phẩm rơi vãi hoặc vật cản gây nguy cơ trượt, vấp ngã?",3,0],
+  [25,"Có nhân viên hoặc quản lý trong ca không mặc đầy đủ đồng phục theo quy định?",3,0],
+  [26,"Sàn bán hàng, lối khách di chuyển có rác, bụi hay vết dơ; hoặc trần nhà có mạng nhện nhìn thấy rõ?",2,0]]]
+];
+const QMAP={};Q.forEach(([z,items])=>items.forEach(i=>QMAP[i[0]]={no:i[0],text:i[1],pts:i[2],liet:!!i[3],zone:z}));
+const LOCK_MIN=10, REPEAT=3, LOW=45, TOPN=5, KEEP_DAYS=45, EXPORT_MAX_DAYS=31;
+
+/* ================== TIỆN ÍCH ================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const vnDate=(d=new Date())=>d.toLocaleDateString("en-CA",{timeZone:"Asia/Ho_Chi_Minh"});
+const vnTime=ts=>new Date(ts).toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit"});
+const dmy=d=>String(d||"").split("-").reverse().join("/");
+const dk=d=>"d"+d.replace(/-/g,"");
+const kd=k=>k.slice(1,5)+"-"+k.slice(5,7)+"-"+k.slice(7,9);
+const shortName=s=>String(s||"").replace(/^BHX_[A-Z]+_[A-Z0-9]+ - /,"");
+const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;
+const f1=v=>v==null?"–":v.toFixed(1);
+const pct=(a,b)=>b?Math.round(a*100/b):0;
+const addDays=(d,n)=>{const t=new Date(d+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
+const daysBetween=(a,b)=>Math.round((new Date(b+"T00:00:00Z")-new Date(a+"T00:00:00Z"))/864e5)+1; // inclusive
+const monthEnd=ym=>{const [y,m]=ym.split("-").map(Number);return new Date(Date.UTC(y,m,0)).toISOString().slice(0,10)};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const uid8=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3800)}
+function opts(sel,list,ph,val){sel.innerHTML=`<option value="">${esc(ph)}</option>`+list.map(o=>`<option value="${esc(o.v)}"${o.v===val?" selected":""}>${esc(o.t)}</option>`).join("")}
+const uniq=a=>[...new Set(a)].filter(Boolean).sort((x,y)=>x.localeCompare(y,"vi"));
+function withTimeout(p,ms){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej({code:"timeout"}),ms))])}
+async function retry(fn){try{return await fn()}catch(e){if(e&&(e.code==="unavailable"||e.code==="deadline-exceeded"||e.code==="resource-exhausted")){await sleep(800+Math.random()*1500);return await fn()}throw e}}
+function sysMsg(html){const n=$("#sysNotice");n.hidden=!html;n.innerHTML=html||""}
+
+/* ================== FIREBASE ================== */
+let fs=null,st=null,FV=null,ready=false;
+function initFirebase(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(!window.firebase||!cfg||!cfg.apiKey||/DIEN_/.test(cfg.apiKey)){sysMsg("Chưa cấu hình Firebase. Người quản lý cần điền file <b>firebase-config.js</b> theo hướng dẫn.");return false}
+  firebase.initializeApp(cfg);
+  fs=firebase.firestore();st=firebase.storage();FV=firebase.firestore.FieldValue;
+  try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+  return true;
+}
+
+/* ================== TRẠNG THÁI ================== */
+const draft=store.get("cham_draft",{});
+const prof=store.get("cham_profile",{});
+const S={cv:prof.cv||"QLST",ht:"Hằng ngày",ans:{},rsm:prof.rsm||"",qltp:prof.qltp||"",mst:prof.mst||""};
+if(prof.manv)$("#manv").value=prof.manv;
+if(prof.ten)$("#tenNguoi").value=prof.ten;
+if(draft.day===vnDate()){S.ans=draft.ans||{};S.ht=draft.ht||S.ht}
+let SHOPS=[],ACTIVE=[],BYMST={},MOC={};
+let doneMap={},curRec=null,curSum=null;
+
+function saveDraft(){store.set("cham_draft",{ht:S.ht,ans:S.ans,day:vnDate()})}
+function saveProfile(){store.set("cham_profile",{cv:S.cv,manv:$("#manv").value.trim(),ten:$("#tenNguoi").value.trim(),rsm:S.rsm,qltp:S.qltp,mst:S.mst})}
+const lietCounts=()=>S.cv!=="QLST"||S.ht==="Chấm chéo";
+
+/* ---------- lỗi lặp lại ---------- */
+function repeats(sum){
+  const out=[];if(!sum||!sum.loi)return out;
+  for(const qk in sum.loi){const no=+qk.slice(1);if(!QMAP[no])continue;const clr=(sum.clear||{})[qk]||"";
+    const days=Object.keys(sum.loi[qk]).filter(k=>Array.isArray(sum.loi[qk][k])).map(kd).sort();
+    const after=days.filter(d=>d>clr);
+    out.push({no,days,after,clr,active:after.length>=REPEAT,fixed:days.length>=REPEAT&&after.length<REPEAT&&!!clr,
+      imgs:days.slice().reverse().flatMap(d=>(sum.loi[qk][dk(d)]||[]).map(x=>x.u||x))});
+  }
+  return out.sort((a,b)=>b.after.length-a.after.length);
+}
+
+/* ---------- danh sách shop ---------- */
+function setShops(doc){
+  let data={};try{data=JSON.parse(doc.data||"{}")}catch(e){}
+  const c=data.cot||["mst","ten","khaiTruong","rsm","qltp"];
+  SHOPS=(data.rows||[]).map(r=>{const o={};c.forEach((k,i)=>o[k]=String(r[i]??"").trim());return o});
+  try{MOC=JSON.parse(doc.moc||"{}")}catch(e){MOC={}}
+  const today=vnDate();
+  ACTIVE=SHOPS.filter(s=>s.khaiTruong&&s.khaiTruong<=today);
+  BYMST={};ACTIVE.forEach(s=>BYMST[s.mst]=s);
+  if(S.mst&&!BYMST[S.mst])S.mst="";
+  renderPickers();loadQltpDone();loadShopState();fillKqFilters();
+  if(!$("#view-kq").hidden)loadKQ();
+}
+function renderPickers(){
+  const rsms=uniq(ACTIVE.map(s=>s.rsm));
+  if(S.rsm&&!rsms.includes(S.rsm)){S.rsm="";S.qltp="";S.mst=""}
+  opts($("#selRsm"),rsms.map(v=>({v,t:v})),ACTIVE.length?"— Chọn RSM —":"Đang tải danh sách...",S.rsm);
+  const ql=uniq(ACTIVE.filter(s=>s.rsm===S.rsm).map(s=>s.qltp));
+  if(S.qltp&&!ql.includes(S.qltp)){S.qltp="";S.mst=""}
+  $("#selQltp").disabled=!S.rsm;
+  opts($("#selQltp"),ql.map(v=>({v,t:v})),S.rsm?"— Chọn QLTP —":"Chọn RSM trước",S.qltp);
+  const sh=ACTIVE.filter(s=>s.rsm===S.rsm&&s.qltp===S.qltp).sort((a,b)=>a.mst.localeCompare(b.mst,"vi",{numeric:true}));
+  if(S.mst&&!sh.some(s=>s.mst===S.mst))S.mst="";
+  $("#selShop").disabled=!S.qltp;
+  const nd=sh.filter(s=>doneMap[s.mst]).length;
+  opts($("#selShop"),sh.map(s=>({v:s.mst,t:`${doneMap[s.mst]?"✓ ":""}${s.mst} · ${shortName(s.ten)}`})),S.qltp?`— Chọn siêu thị (${sh.length} shop${nd?`, ${nd} đã chấm`:""}) —`:"Chọn QLTP trước",S.mst);
+  const s=BYMST[S.mst];
+  $("#shopCard").hidden=!s;
+  if(s)$("#shopCard").innerHTML=`<b>${esc(s.mst)} · ${esc(s.ten)}</b><span>RSM ${esc(s.rsm)} · QLTP ${esc(s.qltp)} · Khai trương ${esc(dmy(s.khaiTruong))}</span>`;
+  renderDup();renderRep();
+}
+async function loadQltpDone(){
+  doneMap={};if(!ready||!S.qltp){renderPickers();return}
+  const q=S.qltp;
+  try{const s=await retry(()=>fs.collection("qlst").where("ngay","==",vnDate()).where("qltp","==",q).get());
+    if(q!==S.qltp)return;s.docs.forEach(d=>doneMap[d.data().mst]=d.data());renderPickers()}catch(e){console.warn(e)}
+}
+async function loadShopState(){
+  curRec=null;curSum=null;renderDup();renderRep();
+  const m=S.mst;if(!ready||!m)return;
+  const day=vnDate();
+  try{const [a,b]=await Promise.all([
+      retry(()=>fs.collection("qlst").doc(`${day}_${m}`).get()),
+      retry(()=>fs.collection("thang").doc(`${day.slice(0,7)}_${m}`).get())]);
+    if(m!==S.mst)return;curRec=a.exists?a.data():null;curSum=b.exists?b.data():null;
+    if(curRec)doneMap[m]=curRec;renderPickers();renderZones()}catch(e){console.warn(e)}
+}
+$("#selRsm").addEventListener("change",e=>{S.rsm=e.target.value;S.qltp="";S.mst="";saveProfile();doneMap={};renderPickers()});
+$("#selQltp").addEventListener("change",e=>{S.qltp=e.target.value;S.mst="";saveProfile();renderPickers();loadQltpDone()});
+$("#selShop").addEventListener("change",e=>{S.mst=e.target.value;saveProfile();renderPickers();loadShopState()});
+$("#findMst").addEventListener("keydown",e=>{if(e.key!=="Enter")return;e.preventDefault();findShop()});
+$("#findMst").addEventListener("change",findShop);
+function findShop(){const m=$("#findMst").value.trim();if(!m)return;const s=BYMST[m];
+  if(!s){toast(SHOPS.some(x=>x.mst===m)?`MST ${m} chưa tới ngày khai trương`:`Không tìm thấy MST ${m} trong danh sách phân bổ`);return}
+  const qc=S.qltp!==s.qltp;S.rsm=s.rsm;S.qltp=s.qltp;S.mst=s.mst;$("#findMst").value="";saveProfile();renderPickers();
+  if(qc)loadQltpDone();loadShopState()}
+
+/* ---------- khoá 1 lượt QLST/ngày ---------- */
+const recAt=r=>!r?0:(r.t0&&typeof r.t0.toMillis==="function"?r.t0.toMillis():(r.at||0));
+function lockState(){if(S.cv!=="QLST"||!curRec)return {locked:false,r:curRec};
+  const mins=(Date.now()-recAt(curRec))/60000;return {r:curRec,locked:mins>LOCK_MIN,left:Math.max(0,Math.ceil(LOCK_MIN-mins))}}
+function renderDup(){
+  const n=$("#dupNotice"),L=lockState(),btn=$("#btnSubmit");
+  if(!btn.dataset.busy)btn.disabled=false;
+  if(!S.mst||!L.r){n.hidden=true;return}
+  n.hidden=false;const r=L.r,info=`QLST đã chấm lúc ${vnTime(recAt(r))} · ${r.diem} điểm`;
+  if(S.cv!=="QLST"){n.className="notice ok";n.textContent=info+". Lượt QLTP/RSM được ghi riêng, không thay lượt QLST.";return}
+  if(L.locked){n.className="notice ok";n.innerHTML=`<b>Shop đã có lượt chấm hôm nay.</b> ${esc(info)}. Mỗi shop chỉ chấm 1 lần/ngày.`;btn.disabled=true}
+  else{n.className="notice";n.textContent=`${info}. Còn ${L.left} phút để gửi lại (lần mới thay lần cũ), sau đó khoá.`}
+}
+function renderRep(){
+  const el=$("#repNotice"),act=repeats(curSum).filter(x=>x.active);
+  if(!S.mst||!act.length){el.hidden=true;return}
+  el.hidden=false;
+  el.innerHTML=`<b>Cảnh báo lỗi lặp lại trong tháng:</b> ${act.map(x=>`câu ${x.no} (${x.after.length} lần)`).join(", ")}.`+
+    (S.cv==="QLST"?" Khắc phục dứt điểm; QLTP sẽ chấm lại để gỡ cảnh báo.":" Chấm lại đúng tiêu chí: chọn <b>Không lỗi</b> nếu đã khắc phục để gỡ cảnh báo.");
+}
+
+/* ---------- câu hỏi ---------- */
+function renderZones(){
+  const cam=S.ht==="Camera",lc=lietCounts();
+  const rep=new Set(repeats(curSum).filter(x=>x.active).map(x=>x.no));
+  $("#zones").innerHTML=Q.map(([z,items])=>{
+    const tot=items.reduce((a,i)=>a+i[2],0);
+    return `<div class="zone"><div class="zone-h"><h2>${esc(z)}</h2><span class="pts">${items.length} câu · ${tot}đ</span></div>`+
+    items.map(([no,text,pts,liet])=>{
+      const a=S.ans[no]||{},imgs=a.imgs||[];
+      return `<div class="q ${a.v==="bad"?"err":""}" id="q${no}">
+        <div class="q-top"><span class="q-no">${no}</span>
+          <div class="q-text">${esc(text)}${liet?'<span class="tag-liet">LIỆT</span>':""}${rep.has(no)?'<span class="tag-liet" style="background:var(--warn)">LẶP LẠI</span>':""}</div>
+          <span class="q-pts">${pts}đ</span></div>
+        <div class="ans">
+          <button type="button" class="b-ok" data-q="${no}" data-v="ok" aria-pressed="${a.v==="ok"}">Không lỗi</button>
+          <button type="button" class="b-bad" data-q="${no}" data-v="bad" aria-pressed="${a.v==="bad"}">Có lỗi</button>
+          ${cam?`<button type="button" class="b-na" data-q="${no}" data-v="na" aria-pressed="${a.v==="na"}">Không xem được</button>`:""}
+        </div>
+        ${a.v==="bad"?`<div class="evi">
+          <div class="row">
+            <label class="photo-btn"><input type="file" accept="image/*" capture="environment" data-photo="${no}"><span>📷 Chụp ảnh đối soát</span></label>${imgs.length?"":'<span class="req">Bắt buộc ít nhất 1 ảnh</span>'}
+            <div class="thumbs">${imgs.map((im,ix)=>`<div class="t"><img src="${esc(im.u)}" alt="Ảnh đối soát câu ${no}"><button type="button" class="x" data-rm="${no}:${ix}" aria-label="Xoá ảnh">×</button></div>`).join("")}</div>
+          </div>
+          <textarea id="note${no}" data-note="${no}" placeholder="Ghi chú / hướng xử lý (không bắt buộc)">${esc(a.note||"")}</textarea>
+        </div>`:""}
+      </div>`}).join("")+`</div>`}).join("");
+}
+function calc(){
+  let lost=0,done=0,liet=[],errs=0;const lc=lietCounts();
+  for(const no in QMAP){const a=S.ans[no];if(!a||!a.v)continue;done++;
+    if(a.v==="bad"){errs++;const q=QMAP[no];lost+=q.pts;if(q.liet&&lc)liet.push(+no)}}
+  return {diem:100-lost,done,liet,errs};
+}
+function renderBar(){const c=calc();$("#scoreV").textContent=c.diem;
+  $("#statusV").innerHTML=(c.liet.length?`<div class="liet">LIỆT · câu ${c.liet.join(", ")}</div>`:"")+`Đã chấm ${c.done}/26 câu${c.errs?` · ${c.errs} lỗi`:""}`}
+function renderHeader(){
+  document.querySelectorAll("#seg-cv button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.cv));
+  document.querySelectorAll("#seg-ht button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.ht));
+  $("#f-manv").hidden=S.cv==="QLST";
+  $("#camNotice").hidden=S.ht!=="Camera";
+  $("#lietNotice").hidden=lietCounts();
+  $("#dateHint").textContent="Ngày chấm: "+new Date().toLocaleDateString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"})+" (tự ghi nhận)";
+}
+function renderAll(){renderHeader();renderZones();renderBar()}
+
+$("#seg-cv").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.cv=b.dataset.v;saveProfile();renderAll();renderDup();renderRep()});
+$("#seg-ht").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.ht=b.dataset.v;
+  if(S.ht!=="Camera")for(const k in S.ans)if(S.ans[k].v==="na")delete S.ans[k];saveDraft();renderAll()});
+$("#manv").addEventListener("change",saveProfile);
+$("#tenNguoi").addEventListener("change",saveProfile);
+$("#zones").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-q]");
+  if(b){const no=b.dataset.q,a=S.ans[no]||(S.ans[no]={});a.v=b.dataset.v;saveDraft();renderZones();renderBar();return}
+  const r=e.target.closest("button[data-rm]");
+  if(r){const [no,ix]=r.dataset.rm.split(":");S.ans[no].imgs.splice(+ix,1);saveDraft();renderZones()}
+});
+$("#zones").addEventListener("input",e=>{const no=e.target.dataset.note;if(!no)return;S.ans[no].note=e.target.value;clearTimeout(saveDraft._t);saveDraft._t=setTimeout(saveDraft,400)});
+$("#zones").addEventListener("change",async e=>{
+  const no=e.target.dataset.photo;if(!no||!e.target.files[0])return;
+  if(!ready){toast("Chưa kết nối máy chủ, thử lại sau.");return}
+  if(!S.mst){toast("Chọn siêu thị trước khi chụp ảnh.");e.target.value="";return}
+  const sp=e.target.parentElement.querySelector("span");sp.textContent="Đang tải ảnh...";
+  try{
+    const b=await shrink(e.target.files[0]);
+    const path=`tam/${vnDate()}/${S.mst}/c${no}-${uid8()}.jpg`;
+    const ref=st.ref(path);
+    let snap;try{snap=await withTimeout(ref.put(b,{contentType:"image/jpeg"}),45000)}catch(err){await sleep(1500);snap=await withTimeout(ref.put(b,{contentType:"image/jpeg"}),45000)}
+    const u=await snap.ref.getDownloadURL();
+    BLOBS[path]=b;
+    const a=S.ans[no];(a.imgs||(a.imgs=[])).push({u,p:path});saveDraft();renderZones();
+  }catch(err){console.warn(err);sp.textContent="📷 Chụp ảnh đối soát";toast(err&&err.code==="timeout"?"Mạng yếu, ảnh chưa tải lên được. Thử lại.":"Không tải được ảnh, thử lại.")}
+});
+const BLOBS={}; // ảnh đã nén trong phiên, dùng để chép sang giu/ khi lượt cần lưu lâu dài
+async function keepPhotos(){ // lượt LIỆT hoặc dưới 45đ: chép ảnh từ tam/ (tự xoá sau 45 ngày) sang giu/ (giữ lâu dài)
+  for(const n in S.ans){const a=S.ans[n];if(a.v!=="bad")continue;
+    for(const im of a.imgs||[]){if(!im.p||!im.p.startsWith("tam/")||!BLOBS[im.p])continue;
+      try{const np=im.p.replace(/^tam\//,"giu/");const sn=await withTimeout(st.ref(np).put(BLOBS[im.p],{contentType:"image/jpeg"}),30000);
+        im.u=await sn.ref.getDownloadURL();im.p=np}catch(e){console.warn("keepPhotos",e)}}}
+  saveDraft();
+}
+function shrink(file){return new Promise((res,rej)=>{
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{const M=1024,s=Math.min(1,M/Math.max(img.width,img.height));
+    const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+    c.toBlob(b=>b?res(b):rej(new Error("blob")),"image/jpeg",0.7)};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("img"))};img.src=url})}
+$("#btnReset").addEventListener("click",function(){
+  if(this.dataset.arm!=="1"){this.dataset.arm="1";this.textContent="Bấm lần nữa để xoá";setTimeout(()=>{this.dataset.arm="";this.textContent="Xoá kết quả đang chấm"},3000);return}
+  S.ans={};saveDraft();renderAll();this.dataset.arm="";this.textContent="Xoá kết quả đang chấm";window.scrollTo({top:0})});
+
+/* ---------- gửi ---------- */
+function validate(){
+  if(!$("#tenNguoi").value.trim())return {msg:"Nhập họ tên người chấm",el:$("#tenNguoi")};
+  if(S.cv!=="QLST"&&!$("#manv").value.trim())return {msg:"Nhập mã nhân viên (QLTP/RSM)",el:$("#manv")};
+  if(!S.rsm)return {msg:"Chọn RSM",el:$("#selRsm")};
+  if(!S.qltp)return {msg:"Chọn QLTP",el:$("#selQltp")};
+  if(!S.mst||!BYMST[S.mst])return {msg:"Chọn siêu thị",el:$("#selShop")};
+  if(lockState().locked)return {msg:"Shop đã có lượt chấm hôm nay",el:$("#dupNotice")};
+  const miss=[];document.querySelectorAll(".q.missing").forEach(x=>x.classList.remove("missing"));
+  for(const no in QMAP){const a=S.ans[no];
+    if(!a||!a.v){miss.push(no);continue}
+    if(a.v==="bad"&&!(a.imgs||[]).length)miss.push(no)}
+  if(miss.length){miss.forEach(n=>$("#q"+n).classList.add("missing"));
+    return {msg:`Còn ${miss.length} câu chưa chấm hoặc thiếu ảnh đối soát (câu ${miss.slice(0,6).join(", ")}${miss.length>6?"…":""})`,el:$("#q"+miss[0])}}
+  return null;
+}
+function buildJob(){
+  const c=calc(),now=Date.now(),day=vnDate(),ym=day.slice(0,7),s=BYMST[S.mst],lc=lietCounts();
+  const code=v=>v==="ok"?"ok":v==="bad"?"error":"na";
+  const ans=Object.keys(QMAP).map(n=>code((S.ans[n]||{}).v));
+  const loi=Object.keys(S.ans).filter(n=>S.ans[n].v==="bad").map(n=>({q:+n,note:(S.ans[n].note||"").trim(),imgs:(S.ans[n].imgs||[]).map(x=>({u:x.u,p:x.p})),
+    tru:QMAP[n].pts}));
+  const ok=Object.keys(S.ans).filter(n=>S.ans[n].v==="ok").map(Number);
+  const isQ=S.cv==="QLST";
+  const id=isQ?`${day}_${s.mst}`:`${day}_${s.mst}_${uid8()}`;
+  const hasT0=curRec&&curRec.ngay===day&&curRec.t0&&typeof curRec.t0.toMillis==="function";
+  const t0=isQ&&hasT0?curRec.t0:FV.serverTimestamp(); // giữ mốc lần gửi đầu
+  const rec={id,ngay:day,ym,at:now,ts:FV.serverTimestamp(),t0,nguoi:$("#tenNguoi").value.trim(),cv:S.cv,manv:isQ?"":$("#manv").value.trim(),ht:S.ht,
+    mst:s.mst,ten:s.ten,rsm:s.rsm,qltp:s.qltp,diem:c.diem,liet:c.liet.length>0,lietQ:c.liet,lietTinh:lc,soLoi:loi.length,loi,ans};
+  // Tự xoá sau 45 ngày (Firestore TTL); lượt LIỆT hoặc dưới 45đ không có hạn → giữ lâu dài.
+  if(!(rec.liet||rec.diem<LOW))rec.hetHan=firebase.firestore.Timestamp.fromMillis(now+KEEP_DAYS*864e5);
+  const patch={ym,mst:s.mst,ten:s.ten,rsm:s.rsm,qltp:s.qltp,upd:FV.serverTimestamp(),loi:{},
+    hetHan:firebase.firestore.Timestamp.fromMillis(new Date(addDays(monthEnd(ym),62)+"T00:00:00Z").getTime())};
+  if(isQ){patch.qlst={[dk(day)]:{diem:c.diem,ht:S.ht}};
+    if(curRec&&curRec.ngay===day)(curRec.loi||[]).forEach(l=>{if(!loi.some(x=>x.q===l.q))patch.loi["q"+l.q]={[dk(day)]:FV.delete()}})}
+  else{patch.kt={[id]:{ngay:day,diem:c.diem,cv:S.cv,ht:S.ht,liet:rec.liet,nguoi:rec.nguoi}};patch.clear={};ok.forEach(n=>patch.clear["q"+n]=day)}
+  loi.forEach(l=>patch.loi["q"+l.q]={[dk(day)]:l.imgs});
+  return {col:isQ?"qlst":"kt",id,rec,sumId:`${ym}_${s.mst}`,patch,isQ};
+}
+function pend(){return store.get("cham_pending",[])}
+function setPend(a){store.set("cham_pending",a);renderPend()}
+function renderPend(){const p=pend(),n=$("#pendNotice");n.hidden=!p.length;
+  if(p.length)n.innerHTML=`<b>${p.length} lượt chấm đang chờ gửi</b> (${p.map(x=>x.mst).join(", ")}). Kết quả đã lưu trên máy, sẽ tự gửi khi có mạng — không cần chấm lại, đừng xoá dữ liệu trình duyệt.`}
+$("#btnSubmit").addEventListener("click",async()=>{
+  const v=validate();
+  if(v){toast(v.msg);v.el&&v.el.scrollIntoView({behavior:"smooth",block:"center"});return}
+  if(!ready){toast("Chưa kết nối máy chủ. Kiểm tra mạng rồi mở lại trang.");return}
+  const btn=$("#btnSubmit");btn.disabled=true;btn.dataset.busy="1";btn.textContent="Đang gửi...";
+  if(S.cv==="QLST"){ // đọc lại lượt hiện có để giữ mốc t0 và kiểm tra khoá
+    try{const sn=await withTimeout(fs.collection("qlst").doc(`${vnDate()}_${S.mst}`).get(),8000);curRec=sn.exists?sn.data():null}catch(e){}
+    if(lockState().locked){btn.textContent="Gửi kết quả";delete btn.dataset.busy;renderPickers();toast("Shop đã có lượt chấm hôm nay — không gửi thêm.");return}
+  }
+  {const c=calc();if((c.liet.length>0)||c.diem<LOW){btn.textContent="Đang lưu ảnh...";await keepPhotos();btn.textContent="Đang gửi..."}}
+  const job=buildJob();
+  const batch=fs.batch();
+  batch.set(fs.collection(job.col).doc(job.id),job.rec);
+  batch.set(fs.collection("thang").doc(job.sumId),job.patch,{merge:true});
+  const commit=batch.commit();
+  const clear=()=>{S.ans={};saveDraft();renderAll();window.scrollTo({top:0})};
+  try{
+    await withTimeout(commit,15000);
+    if(job.isQ){curRec={...job.rec,t0:null};doneMap[job.rec.mst]=curRec}
+    toast(`Đã gửi ${job.rec.mst}: ${job.rec.diem} điểm${job.rec.liet?" · LIỆT – xử lý ngay":""}`);
+    clear();loadShopState();
+  }catch(e){
+    if(e&&e.code==="timeout"){ // Firestore giữ lượt trên máy và tự gửi khi có mạng
+      setPend([...pend(),{id:job.id,mst:job.rec.mst}]);clear();toast("Mạng yếu: đã lưu trên máy, sẽ tự gửi khi có mạng.");
+      commit.then(()=>{setPend(pend().filter(x=>x.id!==job.id));toast(`Đã gửi xong lượt chờ ${job.rec.mst}`)}).catch(err=>{setPend(pend().filter(x=>x.id!==job.id));toast(`Lượt ${job.rec.mst} bị từ chối: ${err.code==="permission-denied"?"shop đã khoá chấm hôm nay":"lỗi máy chủ"}`)});
+    }else if(e&&e.code==="permission-denied"){toast("Không gửi được: shop đã có lượt chấm quá 10 phút, hoặc dữ liệu không hợp lệ.");loadShopState()}
+    else{console.warn(e);toast("Gửi chưa được, thử lại sau ít giây.")}
+  }finally{btn.textContent="Gửi kết quả";delete btn.dataset.busy;renderDup()}
+});
+
+/* ================== KẾT QUẢ ================== */
+function showTab(t){const kq=t==="kq";$("#view-cham").hidden=kq;$("#view-kq").hidden=!kq;$("#bar").hidden=kq;
+  $("#tab-cham").setAttribute("aria-selected",!kq);$("#tab-kq").setAttribute("aria-selected",kq);
+  if(kq)loadKQ();try{localStorage.setItem("cham_tab",t)}catch(e){}}
+$("#tab-cham").onclick=()=>showTab("cham");$("#tab-kq").onclick=()=>showTab("kq");
+$("#kqDate").value=vnDate();$("#kqMonth").value=vnDate().slice(0,7);
+let kqMode="ngay",kqList="liet",showAll={};
+const cache={};
+async function q(key,fn,force){if(force||!cache[key])cache[key]=(await retry(fn)).docs.map(d=>d.data());return cache[key]}
+async function loadKQ(force){
+  const B=$("#kqBody");
+  $("#fDate").hidden=kqMode!=="ngay";$("#fMonth").hidden=kqMode==="ngay";
+  if(!ready){B.innerHTML=`<div class="empty">Đang kết nối máy chủ...</div>`;return}
+  const day=$("#kqDate").value||vnDate(),ym=kqMode==="ngay"?day.slice(0,7):($("#kqMonth").value||vnDate().slice(0,7));
+  B.innerHTML=`<div class="empty">Đang tải...</div>`;
+  try{
+    if(kqMode==="ngay"){const [d,k]=await Promise.all([
+        q("q"+day,()=>fs.collection("qlst").where("ngay","==",day).get(),force),
+        q("k"+day,()=>fs.collection("kt").where("ngay","==",day).get(),force)]);renderNgay(day,d,k)}
+    else{const s=await q("s"+ym,()=>fs.collection("thang").where("ym","==",ym).get(),force);kqMode==="thang"?renderThang(ym,s):renderLap(ym,s)}
+  }catch(e){console.warn(e);B.innerHTML=`<div class="empty">Không tải được (${esc(e&&e.code||"lỗi")}). Bấm Làm mới để thử lại.</div>`}
+}
+function fillKqFilters(){
+  const r=$("#kqRsm").value,qv=$("#kqQltp").value;
+  opts($("#kqRsm"),uniq(ACTIVE.map(s=>s.rsm)).map(v=>({v,t:v})),"Tất cả",r);
+  opts($("#kqQltp"),uniq(ACTIVE.filter(s=>!$("#kqRsm").value||s.rsm===$("#kqRsm").value).map(s=>s.qltp)).map(v=>({v,t:v})),"Tất cả",qv);
+}
+const flt=x=>{const fr=$("#kqRsm").value,fq=$("#kqQltp").value;return (!fr||x.rsm===fr)&&(!fq||x.qltp===fq)};
+$("#kqDate").addEventListener("change",()=>loadKQ());
+$("#kqMonth").addEventListener("change",()=>loadKQ());
+$("#kqRsm").addEventListener("change",()=>{$("#kqQltp").value="";fillKqFilters();loadKQ()});
+$("#kqQltp").addEventListener("change",()=>loadKQ());
+$("#kqReload").addEventListener("click",()=>loadKQ(true));
+$("#kqMode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;kqMode=b.dataset.v;
+  document.querySelectorAll("#kqMode button").forEach(x=>x.setAttribute("aria-pressed",x===b));loadKQ()});
+$("#kqBody").addEventListener("click",e=>{
+  const b=e.target.closest("#kqSub button");if(b){kqList=b.dataset.v;loadKQ();return}
+  const a=e.target.closest("button[data-all]");if(a){showAll[a.dataset.all]=!showAll[a.dataset.all];loadKQ()}
+});
+function pillCls(r){return r.liet?"liet":r.diem<LOW?"low":r.diem>=90?"good":"mid"}
+function kpis(items){return `<div class="kpis">${items.map(([v,k,bad])=>`<div class="kpi ${bad?"bad":""}"><div class="v">${v}</div><div class="k">${esc(k)}</div></div>`).join("")}</div>`}
+function table(head,rows){return `<div class="tblwrap"><table><thead><tr>${head.map((h,i)=>`<th${i?' style="text-align:right"':""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`}
+const imgU=x=>x&&(x.u||x);
+function loiHTML(r){
+  return `<div class="note">${esc(r.nguoi||"")} · ${esc(r.cv)}${r.manv?" "+esc(r.manv):""} · ${dmy(r.ngay)} ${vnTime(r.at)} · ${esc(r.ht)} · <b>${r.diem}đ</b></div>
+   ${r.loi&&r.loi.length?`<ul>${r.loi.map(l=>{const qq=QMAP[l.q]||{};return `<li>${qq.liet?'<span class="tag-liet" style="margin:0 6px 0 0">LIỆT</span>':""}<b>Câu ${l.q}</b> (−${l.tru??qq.pts}đ): ${esc(qq.text)}
+     ${l.note?`<div class="note">→ ${esc(l.note)}</div>`:""}
+     ${l.imgs&&l.imgs.length?`<div class="thumbs" style="margin-top:4px">${l.imgs.map(x=>`<a href="${esc(imgU(x))}" target="_blank" rel="noopener"><img src="${esc(imgU(x))}" alt="Ảnh đối soát câu ${l.q}" loading="lazy"></a>`).join("")}</div>`:""}</li>`}).join("")}</ul>`:`<div class="note">Không có lỗi.</div>`}`;
+}
+function shopCard(r,extra){return `<details class="shop ${r.liet?"is-liet":""}"><summary>
+  <div style="min-width:0"><div class="nm">${esc(r.mst)} · ${esc(shortName(r.ten))}</div><div class="meta">${esc(r.cv)} · ${esc(r.ht)} · ${esc(r.qltp)} · ${(r.loi||[]).length} lỗi${extra||""}</div></div>
+  <span class="pill ${pillCls(r)}">${r.liet?"LIỆT · ":""}${r.diem}</span></summary><div class="body">${loiHTML(r)}</div></details>`}
+/* nhóm QLTP: Top N yếu nhất, bấm để bung shop */
+function groupBlock(key,title,groups,rowHTML,shopsHTML){
+  const all=!!showAll[key],list=all?groups:groups.slice(0,TOPN);
+  return `<h3 style="font-size:15px;margin:18px 0 6px">${esc(title)}</h3>`+
+    list.map(g=>`<details class="shop"><summary>${rowHTML(g)}</summary><div class="body">${shopsHTML(g)}</div></details>`).join("")+
+    (groups.length>TOPN?`<button class="ghost" type="button" data-all="${key}" style="margin-top:8px">${all?"Thu gọn Top "+TOPN:`Xem tất cả ${groups.length} QLTP`}</button>`:"");
+}
+const gRow=(name,sub,pillTxt,cls)=>`<div style="min-width:0"><div class="nm">${esc(name)}</div><div class="meta">${sub}</div></div><span class="pill ${cls}">${pillTxt}</span>`;
+const shopLine=(s,right,cls)=>`<div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;font-size:14px;align-items:center"><span class="q-no">${esc(s.mst)}</span><span style="min-width:0">${esc(shortName(s.ten))}</span><span class="pill ${cls||""}" style="font-size:12px">${right}</span></div>`;
+
+function renderNgay(day,dAll,kAll){
+  const act=ACTIVE.filter(s=>s.khaiTruong<=day&&flt(s)),recs=dAll.filter(flt),kts=kAll.filter(flt);
+  const byM={};recs.forEach(r=>byM[r.mst]=r);
+  const miss=act.filter(s=>!byM[s.mst]);
+  const aQ=avg(recs.map(r=>r.diem)),aK=avg(kts.map(r=>r.diem));
+  const pairs=kts.filter(k=>byM[k.mst]).map(k=>byM[k.mst].diem-k.diem);
+  const lietN=kts.filter(r=>r.liet).length+recs.filter(r=>r.liet).length;
+  let h=kpis([[act.length,"Shop hoạt động"],[`${recs.length} · ${pct(recs.length,act.length)}%`,"QLST đã chấm"],
+    [f1(aQ),"Điểm TB QLST tự chấm"],[`${f1(aK)}${kts.length?` <small style="font-size:12px;color:var(--muted)">(${kts.length} lượt)</small>`:""}`,"Điểm TB QLTP/RSM/chéo"],
+    [lietN,"Lượt LIỆT",1],[recs.filter(r=>!r.liet&&r.diem<LOW).length,`Lượt dưới ${LOW}đ`,1],[miss.length,"Shop chưa chấm",1]]);
+  if(pairs.length){const d=avg(pairs);h+=`<div class="notice ${d>5?"bad":"ok"}" style="margin-top:10px">${pairs.length} shop được cả QLST và cấp trên chấm cùng ngày: QLST tự chấm ${d>=0?"cao hơn":"thấp hơn"} trung bình <b>${Math.abs(d).toFixed(1)} điểm</b>.${d>5?" QLST đang tự chấm dễ — cần kiểm tra lại.":""}</div>`}
+  // nhóm theo QLTP
+  const G={};act.forEach(s=>{const g=G[s.qltp]||(G[s.qltp]={name:s.qltp,rsm:s.rsm,shops:[],q:[],k:[],liet:0,low:0});g.shops.push(s)});
+  recs.forEach(r=>{const g=G[r.qltp];if(g){g.q.push(r.diem);if(r.liet)g.liet++;else if(r.diem<LOW)g.low++}});
+  kts.forEach(r=>{const g=G[r.qltp];if(g){g.k.push(r.diem);if(r.liet)g.liet++}});
+  const groups=Object.values(G).sort((a,b)=>(a.q.length/a.shops.length)-(b.q.length/b.shops.length)||(avg(a.q)??101)-(avg(b.q)??101));
+  h+=groupBlock("ngayQ",`Top ${TOPN} QLTP cần chú ý (tỷ lệ QLST chấm thấp nhất)`,groups,
+    g=>{const p=pct(g.q.length,g.shops.length);return gRow(g.name,`${esc(g.rsm)} · ${g.q.length}/${g.shops.length} shop đã chấm · TB QLST ${f1(avg(g.q))} · TB cấp trên ${f1(avg(g.k))}${g.liet?` · <b style="color:var(--bad)">${g.liet} LIỆT</b>`:""}`,p+"%",p<80?"low":p<100?"mid":"good")},
+    g=>g.shops.slice().sort((a,b)=>(byM[a.mst]?byM[a.mst].diem:-1)-(byM[b.mst]?byM[b.mst].diem:-1)).map(s=>{const r=byM[s.mst];
+      return shopLine(s,r?`${r.liet?"LIỆT · ":""}${r.diem}đ`:"Chưa chấm",r?pillCls(r):"low")}).join(""));
+  const tabs=[["liet",`LIỆT & dưới ${LOW}đ`],["kt","Lượt QLTP/RSM/chéo"],["miss","Chưa chấm"],["top","Lỗi nhiều nhất"]];
+  if(!tabs.some(t=>t[0]===kqList))kqList="liet";
+  h+=`<div class="subtabs" id="kqSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${kqList===v}">${t}</button>`).join("")}</div>`;
+  const sortS=(a,b)=>(a.liet?a.diem-1000:a.diem)-(b.liet?b.diem-1000:b.diem);
+  if(kqList==="miss")h+=miss.length?`<div class="miss">${miss.sort((a,b)=>(a.qltp+a.mst).localeCompare(b.qltp+b.mst,"vi",{numeric:true})).map(s=>`<span class="m">${esc(s.mst)}</span><span>${esc(shortName(s.ten))} <span class="note">· ${esc(s.qltp)}</span></span>`).join("")}</div>`:`<div class="empty">Tất cả shop đã chấm.</div>`;
+  else if(kqList==="top"){const all=recs.concat(kts),cnt={};all.forEach(r=>(r.loi||[]).forEach(l=>cnt[l.q]=(cnt[l.q]||0)+1));
+    const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+    h+=top.length?table(["Câu","Nội dung","Số lượt","% lượt chấm"],top.map(([n,c])=>`<tr><td class="n" style="text-align:left">${n}</td><td style="white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n">${c}</td><td class="n">${pct(c,all.length)}%</td></tr>`)):`<div class="empty">Chưa có lỗi nào.</div>`}
+  else{const list=(kqList==="kt"?kts.slice():recs.concat(kts).filter(r=>r.liet||r.diem<LOW)).sort(sortS);
+    h+=list.length?list.slice(0,200).map(r=>shopCard(r)).join("")+(list.length>200?`<p class="hint">Hiển thị 200/${list.length} — lọc RSM/QLTP để xem thêm.</p>`:""):`<div class="empty">Không có lượt ${kqList==="kt"?"QLTP/RSM/chéo":`LIỆT hoặc dưới ${LOW}đ`} ngày ${dmy(day)}.</div>`}
+  $("#kqBody").innerHTML=h;
+}
+
+function mocOf(ym){const m=MOC[ym];return m&&m.slice(0,7)===ym?m:ym+"-01"}
+function renderThang(ym,sums){
+  const moc=mocOf(ym),end=monthEnd(ym),today=vnDate(),to=today<end?today:end;
+  if(to<moc){$("#kqBody").innerHTML=`<div class="empty">Tháng ${ym.slice(5)}/${ym.slice(0,4)} tính từ ngày mốc ${dmy(moc)} — chưa tới ngày mốc.</div>`;return}
+  const bySum={};sums.forEach(s=>bySum[s.mst]=s);
+  const act=ACTIVE.filter(s=>s.khaiTruong<=to&&flt(s));
+  const rows=act.map(s=>{const sm=bySum[s.mst]||{},from=s.khaiTruong>moc?s.khaiTruong:moc;
+    const need=daysBetween(from,to);
+    const qd=Object.entries(sm.qlst||{}).filter(([k])=>{const d=kd(k);return d>=from&&d<=to});
+    const kt=Object.values(sm.kt||{}).filter(x=>x.ngay>=moc&&x.ngay<=to);
+    const ktQ=kt.filter(x=>x.cv==="QLTP");
+    return {s,need,done:qd.length,qAvg:avg(qd.map(([,v])=>v.diem)),kt,ktQ,liet:kt.filter(x=>x.liet).length,rep:repeats(sm).filter(x=>x.active).length}});
+  const need=rows.reduce((a,r)=>a+r.need,0),done=rows.reduce((a,r)=>a+r.done,0);
+  const covered=rows.filter(r=>r.ktQ.length).length;
+  const allK=rows.flatMap(r=>r.kt);
+  let h=`<div class="notice ok" style="margin-top:10px">Ngày mốc tháng ${ym.slice(5)}: <b>${dmy(moc)}</b> → tính đến <b>${dmy(to)}</b> (${daysBetween(moc,to)} ngày). Shop khai trương sau mốc tính từ ngày khai trương. Đổi ngày mốc ở sheet CAU_HINH_WEB.</div>`;
+  h+=kpis([[act.length,"Shop hoạt động"],[`${done}/${need}`,"Lượt QLST đã chấm / phải chấm"],[`${pct(done,need)}%`,"Tỷ lệ QLST chấm",pct(done,need)<80],
+    [f1(avg(rows.filter(r=>r.qAvg!=null).map(r=>r.qAvg))),"Điểm TB QLST"],[`${covered}/${act.length}`,"Shop QLTP đã chấm ≥1 lần"],
+    [f1(avg(allK.map(x=>x.diem))),"Điểm TB QLTP/RSM/chéo"],[allK.filter(x=>x.liet).length,"Lượt LIỆT",1],[rows.reduce((a,r)=>a+r.rep,0),"Cảnh báo lặp lại",1]]);
+  const G={};rows.forEach(r=>{const g=G[r.s.qltp]||(G[r.s.qltp]={name:r.s.qltp,rsm:r.s.rsm,rows:[]});g.rows.push(r)});
+  const gs=Object.values(G).map(g=>({...g,need:g.rows.reduce((a,r)=>a+r.need,0),done:g.rows.reduce((a,r)=>a+r.done,0),cov:g.rows.filter(r=>r.ktQ.length).length,
+    kAvg:avg(g.rows.flatMap(r=>r.ktQ.map(x=>x.diem))),liet:g.rows.reduce((a,r)=>a+r.liet,0)}));
+  // Top 5 theo % QLST chấm
+  h+=groupBlock("thQ",`Top ${TOPN} QLTP có tỷ lệ QLST chấm thấp nhất`,gs.slice().sort((a,b)=>a.done/a.need-b.done/b.need),
+    g=>{const p=pct(g.done,g.need);return gRow(g.name,`${esc(g.rsm)} · ${g.done}/${g.need} lượt · ${g.rows.length} shop`,p+"%",p<80?"low":p<100?"mid":"good")},
+    g=>g.rows.slice().sort((a,b)=>a.done/a.need-b.done/b.need).map(r=>shopLine(r.s,`${r.done}/${r.need} ngày`,r.done<r.need?"low":"good")).join(""));
+  // Top 5 theo độ phủ QLTP
+  h+=groupBlock("thK",`Top ${TOPN} QLTP chấm shop ít nhất (mục tiêu mỗi shop ≥1 lần/tháng)`,gs.slice().sort((a,b)=>a.cov/a.rows.length-b.cov/b.rows.length),
+    g=>{const p=pct(g.cov,g.rows.length);return gRow(g.name,`${esc(g.rsm)} · đã chấm ${g.cov}/${g.rows.length} shop · TB ${f1(g.kAvg)}${g.liet?` · <b style="color:var(--bad)">${g.liet} LIỆT</b>`:""}`,p+"%",p<80?"low":p<100?"mid":"good")},
+    g=>g.rows.slice().sort((a,b)=>a.ktQ.length-b.ktQ.length).map(r=>shopLine(r.s,r.ktQ.length?`${r.ktQ.length} lần · ${f1(avg(r.ktQ.map(x=>x.diem)))}đ`:"Chưa chấm",r.ktQ.length?"good":"low")).join(""));
+  $("#kqBody").innerHTML=h;
+}
+
+function renderLap(ym,sums){
+  const rows=[];sums.filter(flt).forEach(s=>repeats(s).forEach(x=>{if(x.active||x.fixed)rows.push({s,x})}));
+  const act=rows.filter(r=>r.x.active),fixed=rows.filter(r=>r.x.fixed);
+  let h=kpis([[act.length,"Cảnh báo đang mở",1],[new Set(act.map(r=>r.s.mst)).size,"Shop có cảnh báo",1],[fixed.length,"Đã khắc phục (QLTP chấm lại)"]]);
+  h+=`<p class="hint" style="margin-top:10px">Cảnh báo khi một tiêu chí có lỗi từ ${REPEAT} ngày trở lên trong tháng. Tự gỡ khi QLTP hoặc RSM chấm lại shop và chọn <b>Không lỗi</b> ở đúng tiêu chí; lỗi lại ${REPEAT} lần sẽ cảnh báo lại.</p>`;
+  const card=({s,x},open)=>{const qq=QMAP[x.no];return `<details class="shop ${open?"is-liet":""}"><summary>
+    <div style="min-width:0"><div class="nm">${esc(s.mst)} · ${esc(shortName(s.ten))}</div>
+    <div class="meta">Câu ${x.no}${qq.liet?" · LIỆT":""} · ${esc(s.qltp)}</div></div>
+    <span class="pill ${open?"liet":"good"}">${open?`${x.after.length} lần`:"Đã gỡ"}</span></summary>
+    <div class="body"><div>${esc(qq.text)}</div>
+    <div class="note">Ngày lỗi: ${x.days.map(dmy).join(", ")}${x.clr?` · Cấp trên chấm lại đạt: ${dmy(x.clr)}`:""}</div>
+    ${x.imgs.length?`<div class="thumbs">${x.imgs.slice(0,12).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi câu ${x.no}" loading="lazy"></a>`).join("")}</div>`:""}</div></details>`};
+  // gom theo QLTP: Top 5 nhiều cảnh báo nhất
+  const G={};act.forEach(r=>{const g=G[r.s.qltp]||(G[r.s.qltp]={name:r.s.qltp,rsm:r.s.rsm,items:[]});g.items.push(r)});
+  const gs=Object.values(G).sort((a,b)=>b.items.length-a.items.length);
+  h+=gs.length?groupBlock("lap",`Top ${TOPN} QLTP nhiều cảnh báo lặp lại nhất`,gs,
+    g=>gRow(g.name,`${esc(g.rsm)} · ${new Set(g.items.map(i=>i.s.mst)).size} shop`,`${g.items.length} cảnh báo`,"liet"),
+    g=>g.items.sort((a,b)=>b.x.after.length-a.x.after.length).map(r=>card(r,true)).join("")):`<div class="empty">Không có cảnh báo lỗi lặp lại.</div>`;
+  if(fixed.length)h+=`<h3 style="font-size:15px;margin:18px 0 0">Đã khắc phục</h3>`+fixed.map(r=>card(r,false)).join("");
+  $("#kqBody").innerHTML=h;
+}
+
+/* ================== XUẤT DỮ LIỆU ================== */
+$("#exFrom").value=vnDate().slice(0,8)+"01";$("#exTo").value=vnDate();
+const csvCell=v=>{v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function download(name,rows){
+  const txt="﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"}));
+  a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+async function fetchRange(col,from,to,onProg){
+  const out=[];let last=null;
+  for(let i=0;i<100;i++){
+    let qy=fs.collection(col).where("ngay",">=",from).where("ngay","<=",to).orderBy("ngay").limit(1000);
+    if(last)qy=qy.startAfter(last);
+    const sn=await retry(()=>qy.get());sn.docs.forEach(d=>out.push(d.data()));onProg&&onProg(out.length);
+    if(sn.docs.length<1000)break;last=sn.docs[sn.docs.length-1];
+  }
+  return out;
+}
+function exRange(){
+  const f=$("#exFrom").value,t=$("#exTo").value;
+  if(!f||!t||f>t){toast("Chọn khoảng ngày hợp lệ");return null}
+  if(daysBetween(f,t)>EXPORT_MAX_DAYS){toast(`Tối đa ${EXPORT_MAX_DAYS} ngày mỗi lần xuất`);return null}
+  return [f,t];
+}
+const ketQua=r=>r.liet?"LIỆT":r.diem<LOW?`DƯỚI ${LOW}Đ`:"ĐẠT";
+const tVN=ms=>ms?new Date(ms).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour12:false}):"";
+async function runExport(kind,btn){
+  if(!ready){toast("Chưa kết nối máy chủ");return}
+  const old=btn.textContent;btn.disabled=true;
+  try{
+    if(kind==="month"){
+      const ym=($("#exTo").value||vnDate()).slice(0,7);btn.textContent="Đang tải...";
+      const sums=(await retry(()=>fs.collection("thang").where("ym","==",ym).get())).docs.map(d=>d.data());
+      const by={};sums.forEach(x=>by[x.mst]=x);
+      const moc=mocOf(ym),end=monthEnd(ym),today=vnDate(),to=today<end?today:end;
+      const rows=[["Tháng","Ngày mốc","Đến ngày","Mã shop","Tên shop","RSM","QLTP","Ngày khai trương","Ngày QLST phải chấm","Ngày QLST đã chấm","% QLST chấm","Điểm TB QLST","Lượt QLTP chấm","Điểm TB QLTP","Lượt RSM/chéo","Lượt LIỆT","Cảnh báo lỗi lặp lại (câu)"]];
+      ACTIVE.filter(s=>s.khaiTruong<=to&&flt(s)).forEach(s=>{const sm=by[s.mst]||{},from=s.khaiTruong>moc?s.khaiTruong:moc;
+        const need=to>=from?daysBetween(from,to):0;
+        const qd=Object.entries(sm.qlst||{}).filter(([k])=>{const d=kd(k);return d>=from&&d<=to}).map(([,v])=>v.diem);
+        const kt=Object.values(sm.kt||{}).filter(x=>x.ngay>=moc&&x.ngay<=to);const kq=kt.filter(x=>x.cv==="QLTP");
+        rows.push([ym,dmy(moc),dmy(to),s.mst,s.ten,s.rsm,s.qltp,dmy(s.khaiTruong),need,qd.length,need?pct(qd.length,need)+"%":"",f1(avg(qd)),kq.length,f1(avg(kq.map(x=>x.diem))),kt.length-kq.length,kt.filter(x=>x.liet).length,
+          repeats(sm).filter(x=>x.active).map(x=>x.no).join(" ")])});
+      download(`tong-hop-thang-${ym}.csv`,rows);toast(`Đã tải ${rows.length-1} shop`);return;
+    }
+    const rg=exRange();if(!rg)return;const [f,t]=rg;
+    const prog=n=>btn.textContent=`Đang tải ${n} lượt...`;
+    const recs=(await fetchRange("qlst",f,t,prog)).concat(await fetchRange("kt",f,t,prog)).filter(flt).sort((a,b)=>(a.at||0)-(b.at||0));
+    if(kind==="detail"){
+      const head=["ID","Thời gian VN","Ngày","Người chấm","Mã NV","Vai trò","Hình thức","Mã shop","Tên shop","RSM","QLTP","Điểm","SL lỗi","SL lỗi LIỆT","Kết quả"].concat(Object.keys(QMAP).map(n=>"C"+String(n).padStart(2,"0"))).concat(["Ghi chú lỗi","Link ảnh"]);
+      const rows=[head];recs.forEach(r=>rows.push([r.id,tVN(r.at),dmy(r.ngay),r.nguoi,r.manv,r.cv,r.ht,r.mst,r.ten,r.rsm,r.qltp,r.diem,(r.loi||[]).length,(r.lietQ||[]).length,ketQua(r)]
+        .concat((r.ans||[]).map(a=>a==="error"?"Lỗi":a==="na"?"Không xem được":"Đạt"))
+        .concat([(r.loi||[]).filter(l=>l.note).map(l=>`C${l.q}: ${l.note}`).join(" | "),(r.loi||[]).flatMap(l=>(l.imgs||[]).map(imgU)).join(" ")])));
+      download(`chi-tiet-${f}_${t}.csv`,rows);toast(`Đã tải ${recs.length} lượt`);
+    }else{
+      const rows=[["ID lượt","Thời gian VN","Ngày","Mã shop","Tên shop","RSM","QLTP","Vai trò","Hình thức","Người chấm","Câu","Nội dung lỗi","Điểm trừ","Câu LIỆT","Tính LIỆT","Ghi chú","Ảnh 1","Ảnh 2","Ảnh 3"]];
+      recs.forEach(r=>(r.loi||[]).forEach(l=>{const im=(l.imgs||[]).map(imgU);rows.push([r.id,tVN(r.at),dmy(r.ngay),r.mst,r.ten,r.rsm,r.qltp,r.cv,r.ht,r.nguoi,l.q,(QMAP[l.q]||{}).text,l.tru,QMAP[l.q]&&QMAP[l.q].liet?"CÓ":"",QMAP[l.q]&&QMAP[l.q].liet&&r.lietTinh?"CÓ":"",l.note,im[0]||"",im[1]||"",im[2]||""])}));
+      download(`loi-${f}_${t}.csv`,rows);toast(`Đã tải ${rows.length-1} lỗi`);
+    }
+  }catch(e){console.warn(e);toast("Xuất chưa được ("+(e&&e.code||"lỗi")+"), thử lại.")}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+$("#exDetail").addEventListener("click",e=>runExport("detail",e.currentTarget));
+$("#exLoi").addEventListener("click",e=>runExport("loi",e.currentTarget));
+$("#exMonth").addEventListener("click",e=>runExport("month",e.currentTarget));
+
+/* ================== KHỞI ĐỘNG ================== */
+renderAll();renderPickers();renderPend();
+try{if(localStorage.getItem("cham_tab")==="kq")showTab("kq")}catch(e){}
+setInterval(renderDup,30000);
+(async()=>{
+  if(!initFirebase())return;
+  try{
+    await withTimeout(firebase.auth().signInAnonymously(),20000);
+    ready=true;sysMsg("");
+    const s=await retry(()=>fs.collection("config").doc("shops").get());
+    if(s.exists)setShops(s.data());else sysMsg("Chưa có danh sách shop. Người quản lý cần chạy đồng bộ danh sách (Apps Script → syncShops).");
+    renderZones();
+    if(pend().length)fs.waitForPendingWrites().then(()=>{setPend([]);toast("Đã gửi xong các lượt chờ")}).catch(()=>{});
+    if(!$("#view-kq").hidden)loadKQ();
+  }catch(e){console.warn(e);sysMsg(e&&e.code==="timeout"?"Mạng yếu, chưa kết nối được máy chủ. Kiểm tra mạng rồi tải lại trang.":"Không kết nối được máy chủ ("+esc(e&&e.code||"lỗi")+"). Tải lại trang.")}
+})();
+</script>
+
+</body>
+</html>

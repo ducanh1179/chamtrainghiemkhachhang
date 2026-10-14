@@ -1,0 +1,17 @@
+rules_version = '2';
+// Quy tắc bảo mật Storage (ảnh đối soát).
+// Dán vào Firebase Console → Storage → Rules → Publish.
+//   tam/ : ảnh mọi lượt — tự xoá sau 45 ngày (cài Lifecycle, xem README)
+//   giu/ : ảnh của lượt LIỆT hoặc dưới 45đ — giữ lâu dài để tham chiếu
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{khu}/{day}/{mst}/{file} {
+      allow read: if request.auth != null && khu in ['tam', 'giu'];
+      // Chỉ ảnh, tối đa 3MB (web tự nén còn ~100–150KB), không ghi đè, không xoá từ web.
+      allow create: if request.auth != null && khu in ['tam', 'giu']
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update, delete: if false;
+    }
+  }
+}
