@@ -102,6 +102,7 @@ table.stat tr.grp td:first-child{background:var(--sunk)} table.stat tr.tot td:fi
 .tbl2h{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .tbl2b{display:flex;gap:6px;margin-bottom:6px}
 .ghost.sm{padding:5px 10px;font-size:12px}
+.cham-lai{border:0;background:var(--brand);color:#fff;font:700 12px var(--f-body);padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
 table.stat tr.tot td{background:var(--brand-soft);font-weight:800;border-top:2px solid var(--brand)}
 td.c-bad{color:var(--bad);font-weight:700} td.c-warn{color:var(--warn);font-weight:700} td.c-ok{color:var(--ok);font-weight:700} td.muted{color:var(--muted)}
 .q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:10px;margin-bottom:8px}
@@ -275,7 +276,7 @@ h3{text-wrap:balance}
     <div class="subtabs" id="kqMode" style="margin-top:4px">
       <button type="button" data-v="ngay" aria-pressed="true">Theo ngày</button>
       <button type="button" data-v="thang" aria-pressed="false">Báo cáo tháng</button>
-      <button type="button" data-v="lap" aria-pressed="false">Lỗi lặp lại</button>
+      <button type="button" data-v="lap" aria-pressed="false">Cảnh báo</button>
     </div>
     <div class="filters">
       <div class="field" id="fDate"><label class="lbl" for="kqDate">Ngày</label><input type="date" id="kqDate"></div>
@@ -352,7 +353,7 @@ const Q=[
   [26,"Sàn bán hàng, lối khách di chuyển có rác, bụi hay vết dơ; hoặc trần nhà có mạng nhện nhìn thấy rõ?",2,0]]]
 ];
 const QMAP={};Q.forEach(([z,items])=>items.forEach(i=>QMAP[i[0]]={no:i[0],text:i[1],pts:i[2],liet:!!i[3],zone:z}));
-const APP_VER="14/10/2026 17:20";            // ← đổi mỗi lần cập nhật web
+const APP_VER="14/10/2026 16:35";            // ← đổi mỗi lần cập nhật web
 const LOCK_MIN=10, REPEAT=3, LOW=45, TOPN=5, KEEP_DAYS=45, EXPORT_MAX_DAYS=31;
 
 /* ================== TIỆN ÍCH ================== */
@@ -774,6 +775,9 @@ $("#kqBody").addEventListener("click",e=>{
   if(oa){const on=oa.dataset.openall==="1",tb=oa.closest(".tbl2h").nextElementSibling;
     tb.querySelectorAll("tr.grp").forEach(g=>{OPEN[g.dataset.g]=on;g.querySelector(".arr").textContent=on?"▾":"▸"});
     tb.querySelectorAll("tr.ch").forEach(r=>r.hidden=!on);return}
+  const cl=e.target.closest("button[data-cham]");if(cl){chamLai(cl.dataset.cham);return}
+  if(e.target.closest("#cbCsv")){exportCB();return}
+  const cs=e.target.closest("#cbSub button");if(cs){cbList=cs.dataset.v;loadKQ();return}
   const rx=e.target.closest("tr.rowx[data-det]");
   if(rx&&!e.target.closest("a")){const d=document.getElementById(rx.dataset.det);d.hidden=!d.hidden;const a=rx.querySelector(".arr");if(a)a.textContent=d.hidden?"▸":"▾";return}
   const g=e.target.closest("tr.grp[data-g]");
@@ -960,42 +964,106 @@ function renderThang(ym,sums){
   $("#kqBody").innerHTML=h;
 }
 
+/* ================== CẢNH BÁO: lỗi lặp ≥3 ngày/tháng + LIỆT → phải chấm lại ================== */
+const HAN=3;                                                  // quá 3 ngày chưa chấm lại → Quá hạn
+const LIET_SET=new Set(Object.values(QMAP).filter(q=>q.liet).map(q=>q.no));
+const ST={qh:["Quá hạn","c-bad",0],vl:["Chấm lại vẫn lỗi","c-bad",1],cho:["Chờ chấm lại","c-warn",2],ok:["Đã xử lý","c-ok",3]};
+let cbList="mo",CB_ROWS=[];
+function canhBao(s,sum,moc,today){
+  const items=[];if(!sum)return null;
+  const loi=sum.loi||{},clear=sum.clear||{},qd=sum.qlst||{};
+  const kt=Object.values(sum.kt||{}).filter(k=>k&&k.ngay>=moc).sort((a,b)=>a.ngay.localeCompare(b.ngay));
+  const imgsOf=(qk,days)=>days.slice().reverse().flatMap(d=>((loi[qk]||{})[dk(d)]||[]).map(x=>x.u||x)).filter(Boolean);
+  const daysOf=qk=>Object.keys(loi[qk]||{}).filter(k=>Array.isArray(loi[qk][k])).map(kd).filter(d=>d>=moc).sort();
+  const ktAfter=d=>kt.filter(k=>k.ngay>d);
+  const mk=(type,no,start,days,imgs,status,since,extra)=>{
+    if(status!=="ok"&&daysBetween(since,today)-1>HAN)status="qh";
+    items.push({type,no,start,days,imgs,status,since,wait:status==="ok"?0:daysBetween(since,today)-1,...extra})};
+  // 1) Lỗi lặp: cùng tiêu chí ≥3 ngày (sau lần cấp trên chấm đạt gần nhất)
+  for(const qk in loi){const no=+qk.slice(1);if(!QMAP[no])continue;
+    const days=daysOf(qk),clr=clear[qk]||"",after=days.filter(d=>d>clr);
+    if(after.length>=REPEAT){const trig=after[REPEAT-1],re=ktAfter(trig);
+      mk("lap",no,trig,after,imgsOf(qk,after),re.length?"vl":"cho",re.length?re[re.length-1].ngay:trig)}
+    else if(days.length>=REPEAT&&clr){mk("lap",no,days[REPEAT-1],days,imgsOf(qk,days),"ok",clr,{clr})}
+  }
+  // 2) LIỆT chính thức: QLTP/RSM chấm hoặc chấm chéo
+  const lietDays=uniq(kt.filter(k=>k.liet).map(k=>k.ngay).concat(Object.keys(qd).filter(k=>qd[k]&&qd[k].ht==="Chấm chéo"&&kd(k)>=moc&&[...LIET_SET].some(n=>((loi["q"+n]||{})[k]))).map(kd))).sort();
+  if(lietDays.length){const last=lietDays[lietDays.length-1],fixed=kt.some(k=>!k.liet&&k.ngay>last);
+    const okBefore=kt.filter(k=>!k.liet&&k.ngay<last).map(k=>k.ngay).pop()||"",streak=lietDays.filter(d=>d>okBefore);
+    const qs=[...LIET_SET].filter(n=>lietDays.some(d=>(loi["q"+n]||{})[dk(d)]));
+    mk("liet",qs.join(", ")||"-",streak[0],lietDays,qs.flatMap(n=>imgsOf("q"+n,lietDays)),fixed?"ok":streak.length>1?"vl":"cho",fixed?last:streak.length>1?last:streak[0],{qs})}
+  // 3) QLST tự báo lỗi câu LIỆT (chưa tính LIỆT chính thức) → QLTP xuống xác nhận
+  [...LIET_SET].forEach(n=>{const qk="q"+n;const days=daysOf(qk).filter(d=>qd[dk(d)]&&qd[dk(d)].ht!=="Chấm chéo"&&!lietDays.includes(d));if(!days.length)return;
+    const clr=clear[qk]||"",open=days.filter(d=>d>clr);
+    if(!open.length){mk("qliet",n,days[0],days,imgsOf(qk,days),"ok",clr,{clr});return}
+    const re=ktAfter(open[0]);mk("qliet",n,open[0],open,imgsOf(qk,open),re.length?"vl":"cho",re.length?re[re.length-1].ngay:open[0])});
+  if(!items.length)return null;
+  const open=items.filter(i=>i.status!=="ok");
+  const status=open.length?open.reduce((a,i)=>ST[i.status][2]<ST[a][2]?i.status:a,"cho"):"ok";
+  return {s,items,open,status,start:(open.length?open:items).map(i=>i.start).sort()[0],
+    wait:Math.max(0,...open.map(i=>i.wait)),
+    lap:open.some(i=>i.type==="lap"),liet:open.some(i=>i.type==="liet"),qliet:open.some(i=>i.type==="qliet")};
+}
+const TYPE_LBL={lap:"Lặp",liet:"LIỆT",qliet:"QLST báo câu LIỆT"};
 function renderLap(ym,sums){
+  const moc=mocOf(ym),end=monthEnd(ym),today=vnDate()<end?vnDate():end;
   const bySum={};sums.forEach(s=>bySum[s.mst]=s);
-  const end=monthEnd(ym),act=ACTIVE.filter(s=>s.khaiTruong<=end&&flt(s));
-  const items=act.map(s=>{const rp=repeats(bySum[s.mst]);return {s,rsm:s.rsm,qltp:s.qltp,open:rp.filter(x=>x.active),fixed:rp.filter(x=>x.fixed)}});
-  const open=items.flatMap(r=>r.open.map(x=>({s:r.s,x}))),fixed=items.flatMap(r=>r.fixed.map(x=>({s:r.s,x})));
-  let h=kpis([[D(open.length),"Cảnh báo đang mở",1],[D(cnt(items,r=>r.open.length)),"Shop có cảnh báo",1],[D(cnt(open,o=>QMAP[o.x.no].liet)),"Cảnh báo câu LIỆT",1],[D(fixed.length),"Đã khắc phục (cấp trên chấm lại)"]]);
-  h+=`<p class="hint" style="margin-top:10px">Cảnh báo khi một tiêu chí có lỗi từ ${REPEAT} ngày trở lên trong tháng. Tự gỡ khi QLTP hoặc RSM chấm lại shop và chọn <b>Không lỗi</b> ở đúng tiêu chí; lỗi lại ${REPEAT} lần sẽ cảnh báo lại.</p>`;
+  const act=ACTIVE.filter(s=>s.khaiTruong<=end&&flt(s));
+  const all=act.map(s=>({s,rsm:s.rsm,qltp:s.qltp,cb:canhBao(s,bySum[s.mst],moc,today)}));
+  const cbs=all.filter(r=>r.cb).map(r=>r.cb),open=cbs.filter(c=>c.status!=="ok");
+  const done=cbs.length-open.length;
+  let h=kpis([[D(open.length),"Shop cần chấm lại",1],[D(cnt(open,c=>c.lap)),"Lỗi lặp ≥"+REPEAT+" ngày",1],[D(cnt(open,c=>c.liet)),"LIỆT",1],
+    [D(cnt(open,c=>c.qliet)),"QLST báo câu LIỆT",1],[D(cnt(open,c=>c.status==="qh")),`Quá hạn (>${HAN} ngày)`,1],[cbs.length?P(done,cbs.length):"-","Đã xử lý"]]);
+  h+=`<p class="hint" style="margin-top:10px">Shop vào danh sách khi: một tiêu chí lỗi từ ${REPEAT} ngày trở lên trong tháng (từ ngày mốc ${dmy(moc)}), hoặc bị LIỆT, hoặc QLST tự báo lỗi câu LIỆT. <b>QLTP/RSM chấm lại</b> và chọn <b>Không lỗi</b> ở đúng tiêu chí → tự chuyển <b>Đã xử lý</b>. Quá ${HAN} ngày chưa chấm lại → <b>Quá hạn</b>.</p>`;
+  const C=(f,cls)=>a=>{const v=f(a);return V(D(v),v?cls:"")};
   const cols=[
     {h:"Shop HĐ",f:a=>V(D(a.length))},
-    {h:"Shop có cảnh báo",f:a=>{const v=cnt(a,r=>r.open.length);return V(D(v),v?"c-bad":"")}},
-    {h:"Cảnh báo đang mở",f:a=>{const v=sum(a,r=>r.open.length);return V(D(v),v?"c-bad":"")}},
-    {h:"Câu LIỆT",f:a=>{const v=sum(a,r=>cnt(r.open,x=>QMAP[x.no].liet));return V(D(v),v?"c-bad":"")}},
-    {h:"Đã khắc phục",f:a=>{const v=sum(a,r=>r.fixed.length);return V(D(v),v?"c-ok":"")}}];
-  const keys={pct:a=>-cnt(a,r=>r.open.length)/(a.length||1),diem:a=>-sum(a,r=>r.open.length),liet:a=>-sum(a,r=>cnt(r.open,x=>QMAP[x.no].liet))};
-  h+=hierTables("Bảng 1 · Lỗi lặp lại theo RSM","Bảng 2 · Lỗi lặp lại – QLTP theo RSM",items,cols,keys);
-  // theo tiêu chí
-  const byQ={};open.forEach(o=>(byQ[o.x.no]||(byQ[o.x.no]={o:0,f:0})).o++);fixed.forEach(o=>(byQ[o.x.no]||(byQ[o.x.no]={o:0,f:0})).f++);
-  const qs=Object.entries(byQ).sort((a,b)=>b[1].o-a[1].o||a[0]-b[0]);
-  h+=`<h3 class="tbl-title">Bảng 3 · Tiêu chí lặp lại</h3>`+(qs.length?tableRaw(["Câu",{h:"Nội dung"},{h:"Đang mở",r:1},{h:"Đã gỡ",r:1}],qs.map(([n,v])=>`<tr><td>${n}</td><td style="text-align:left;white-space:normal;min-width:220px">${esc(QMAP[n].text)}${QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""}</td><td class="n ${v.o?"c-bad":""}">${D(v.o)}</td><td class="n ${v.f?"c-ok":""}">${D(v.f)}</td></tr>`)):`<div class="empty">Không có tiêu chí lặp lại.</div>`);
-  // chi tiết kèm ảnh
-  const card=({s,x},isOpen)=>{const qq=QMAP[x.no];return `<details class="shop ${isOpen?"is-liet":""}"><summary>
-    <div style="min-width:0"><div class="nm">${esc(s.mst)} · ${esc(shortName(s.ten))}</div>
-    <div class="meta">Câu ${x.no}${qq.liet?" · LIỆT":""} · ${esc(s.qltp)}</div></div>
-    <span class="pill ${isOpen?"liet":"good"}">${isOpen?`${x.after.length} lần`:"Đã gỡ"}</span></summary>
-    <div class="body"><div>${esc(qq.text)}</div>
-    <div class="note">Ngày lỗi: ${x.days.map(dmy).join(", ")}${x.clr?` · Cấp trên chấm lại đạt: ${dmy(x.clr)}`:""}</div>
-    ${x.imgs.length?`<div class="thumbs">${x.imgs.slice(0,12).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi câu ${x.no}" loading="lazy"></a>`).join("")}</div>`:""}</div></details>`};
-  const LH=["MST",{h:"Siêu thị"},{h:"Câu"},{h:"Số lần",r:1},{h:"Nội dung"},{h:"Ngày lỗi"},{h:"Ngày gỡ"},{h:"QLTP"}];
-  const lrow=({s,x},isOpen)=>{const qq=QMAP[x.no];
-    return rowDet([esc(s.mst),TX(esc(shortName(s.ten))),TL(`${x.no}${qq.liet?' <span class="tag-liet">LIỆT</span>':""}`),TN(D(isOpen?x.after.length:x.days.length),isOpen?"c-bad":""),TX(esc(qq.text)),
-      TX(x.days.map(d=>dmy(d).slice(0,5)).join(", ")),TL(x.clr?dmy(x.clr):"-"),TL(esc(s.qltp))],
-      x.imgs.length?`<div class="thumbs">${x.imgs.slice(0,12).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi câu ${x.no}" loading="lazy"></a>`).join("")}</div>`:`<div class="note">Không có ảnh.</div>`,"",8)};
-  h+=`<h3 class="tbl-title">Bảng 4 · Chi tiết cảnh báo đang mở (bấm dòng để xem ảnh)</h3>`+moreTable(LH,open.sort((a,b)=>(a.s.rsm+a.s.qltp).localeCompare(b.s.rsm+b.s.qltp,"vi")||b.x.after.length-a.x.after.length).map(o=>lrow(o,true)),`<div class="empty">Không có cảnh báo đang mở.</div>`);
-  if(fixed.length)h+=`<h3 class="tbl-title">Bảng 5 · Đã khắc phục</h3>`+moreTable(LH,fixed.map(o=>lrow(o,false)),"");
+    {h:"Shop cảnh báo",f:C(a=>cnt(a,r=>r.cb),"")},
+    {h:"Lỗi lặp",f:C(a=>cnt(a,r=>r.cb&&r.cb.lap),"c-bad")},
+    {h:"LIỆT",f:C(a=>cnt(a,r=>r.cb&&r.cb.liet),"c-bad")},
+    {h:"QLST báo LIỆT",f:C(a=>cnt(a,r=>r.cb&&r.cb.qliet),"c-warn")},
+    {h:"Còn chờ",f:C(a=>cnt(a,r=>r.cb&&(r.cb.status==="cho"||r.cb.status==="vl")),"c-warn")},
+    {h:"Quá hạn",f:C(a=>cnt(a,r=>r.cb&&r.cb.status==="qh"),"c-bad")},
+    {h:"Đã xử lý",f:C(a=>cnt(a,r=>r.cb&&r.cb.status==="ok"),"c-ok")},
+    {h:"% xử lý",f:a=>{const n=cnt(a,r=>r.cb),d=cnt(a,r=>r.cb&&r.cb.status==="ok");return V(n?P(d,n):"-",!n?"muted":d===n?"c-ok":d*2<n?"c-bad":"c-warn")}}];
+  const keys={pct:a=>{const n=cnt(a,r=>r.cb);return n?cnt(a,r=>r.cb&&r.cb.status==="ok")/n:1},diem:a=>-cnt(a,r=>r.cb&&r.cb.status==="qh"),liet:a=>-cnt(a,r=>r.cb&&r.cb.liet)};
+  h+=hierTables("Bảng 1 · Cảnh báo theo RSM","Bảng 2 · Cảnh báo – QLTP theo RSM",all,cols,keys);
+  // Bảng 3: danh sách shop
+  const tabs=[["mo",`Cần xử lý (${open.length})`],["qh",`Quá hạn (${cnt(open,c=>c.status==="qh")})`],["ok",`Đã xử lý (${done})`],["all",`Tất cả (${cbs.length})`]];
+  const list=cbs.filter(c=>cbList==="all"||(cbList==="mo"?c.status!=="ok":c.status===cbList))
+    .sort((a,b)=>ST[a.status][2]-ST[b.status][2]||b.wait-a.wait||(a.s.rsm+a.s.qltp+a.s.mst).localeCompare(b.s.rsm+b.s.qltp+b.s.mst,"vi",{numeric:true}));
+  CB_ROWS=list;
+  h+=`<div class="tbl2h"><h3 class="tbl-title">Bảng 3 · Danh sách shop cần chấm lại (bấm dòng xem ảnh)</h3><span class="tbl2b"><button type="button" class="ghost sm" id="cbCsv">⤓ Xuất CSV</button></span></div>`;
+  h+=`<div class="subtabs" id="cbSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${cbList===v}">${t}</button>`).join("")}</div>`;
+  const head=["MST",{h:""},{h:"Siêu thị"},{h:"Trạng thái"},{h:"Loại"},{h:"Câu lỗi"},{h:"Phát sinh"},{h:"Số ngày chờ",r:1},{h:"QLTP"},{h:"RSM"}];
+  const rows=list.map(c=>{const st=ST[c.status],its=c.status==="ok"?c.items:c.open;
+    const types=uniq(its.map(i=>TYPE_LBL[i.type]));
+    const qs=its.map(i=>i.type==="liet"?`LIỆT(${i.no})`:i.type==="qliet"?`${i.no}*`:String(i.no)).join(", ");
+    const det=c.items.map(i=>{const q=QMAP[i.no];const txt=i.type==="liet"?`<b>LIỆT</b> ngày ${i.days.map(d=>dmy(d).slice(0,5)).join(", ")}${i.qs&&i.qs.length?" · câu "+i.qs.map(n=>`${n}: ${esc(QMAP[n].text)}`).join(" | "):""}`
+        :`<b>${TYPE_LBL[i.type]} · Câu ${i.no}</b>: ${esc(q.text)}<div class="note">Ngày lỗi: ${i.days.map(d=>dmy(d).slice(0,5)).join(", ")}</div>`;
+      return `<div style="margin-bottom:10px"><span class="${ST[i.status][1]}" style="font-weight:700">[${ST[i.status][0]}${i.status!=="ok"?` · ${i.wait} ngày`:i.clr?` · ${dmy(i.clr)}`:""}]</span> ${txt}
+        ${i.imgs.length?`<div class="thumbs">${uniq(i.imgs).slice(0,8).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Ảnh lỗi" loading="lazy"></a>`).join("")}</div>`:""}</div>`}).join("");
+    return rowDet([esc(c.s.mst),`<td>${c.status!=="ok"?`<button type="button" class="cham-lai" data-cham="${esc(c.s.mst)}">Chấm lại</button>`:""}</td>`,
+      `<td class="tx" style="min-width:105px">${esc(shortName(c.s.ten))}</td>`,`<td class="${st[1]}" style="white-space:normal;min-width:70px">${st[0]}</td>`,
+      TL(types.join(" + ")),TX(qs),TL(dmy(c.start).slice(0,5)),TN(c.status==="ok"?"-":D(c.wait),c.status==="qh"?"c-bad":""),TL(esc(c.s.qltp)),TL(esc(c.s.rsm))],det,c.status==="qh"?"liet-row":"",10)});
+  h+=moreTable(head,rows,`<div class="empty">Không có shop nào trong mục này.</div>`);
+  h+=`<p class="hint">* = QLST tự báo lỗi câu LIỆT (chưa tính LIỆT chính thức), QLTP cần xuống chấm lại xác nhận.</p>`;
+  // Bảng 4: tiêu chí
+  const byQ={};cbs.forEach(c=>c.items.forEach(i=>{if(i.type==="liet")return;const o=byQ[i.no]||(byQ[i.no]={lap:0,ql:0,ok:0});
+    if(i.status==="ok")o.ok++;else if(i.type==="lap")o.lap++;else o.ql++}));
+  const qs=Object.entries(byQ).sort((a,b)=>(b[1].lap+b[1].ql)-(a[1].lap+a[1].ql)||a[0]-b[0]);
+  h+=`<h3 class="tbl-title">Bảng 4 · Tiêu chí bị cảnh báo nhiều nhất</h3>`+(qs.length?moreTable(["Câu",{h:"Nội dung"},{h:"Shop lỗi lặp",r:1},{h:"QLST báo LIỆT",r:1},{h:"Đã xử lý",r:1}],qs.map(([n,v])=>`<tr><td>${n}</td>${TX(esc(QMAP[n].text)+(QMAP[n].liet?'<span class="tag-liet">LIỆT</span>':""))}${TN(D(v.lap),v.lap?"c-bad":"")}${TN(D(v.ql),v.ql?"c-warn":"")}${TN(D(v.ok),v.ok?"c-ok":"")}</tr>`)):`<div class="empty">Chưa có tiêu chí nào bị cảnh báo.</div>`);
   $("#kqBody").innerHTML=h;
 }
+function chamLai(mst){const s=BYMST[mst];if(!s){toast("Không tìm thấy shop "+mst);return}
+  const qc=S.qltp!==s.qltp;S.rsm=s.rsm;S.qltp=s.qltp;S.mst=s.mst;saveProfile();showTab("cham");renderPickers();if(qc)loadQltpDone();loadShopState();
+  window.scrollTo({top:0,behavior:"smooth"});
+  toast(S.cv==="QLST"?`Đã chọn ${mst}. Lưu ý: chỉ QLTP/RSM chấm lại mới gỡ được cảnh báo.`:`Đã chọn ${mst} · ${shortName(s.ten)} — chấm lại ngay.`)}
+function exportCB(){
+  const rows=[["Trạng thái","Mã shop","Tên shop","RSM","QLTP","Loại","Câu","Nội dung","Ngày phát sinh","Ngày lỗi","Số ngày chờ","Ảnh"]];
+  CB_ROWS.forEach(c=>c.items.forEach(i=>rows.push([ST[i.status][0],c.s.mst,c.s.ten,c.s.rsm,c.s.qltp,TYPE_LBL[i.type],i.type==="liet"?(i.qs||[]).join(" "):i.no,
+    i.type==="liet"?(i.qs||[]).map(n=>QMAP[n].text).join(" | "):QMAP[i.no].text,dmy(i.start),i.days.map(dmy).join(" "),i.status==="ok"?"":i.wait,uniq(i.imgs).join(" ")])));
+  download(`canh-bao-${vnDate()}.csv`,rows);toast(`Đã tải ${rows.length-1} dòng`)}
 
 /* ================== XUẤT DỮ LIỆU ================== */
 $("#exFrom").value=vnDate().slice(0,8)+"01";$("#exTo").value=vnDate();
@@ -1063,7 +1131,10 @@ $("#exLoi").addEventListener("click",e=>runExport("loi",e.currentTarget));
 $("#exMonth").addEventListener("click",e=>runExport("month",e.currentTarget));
 
 /* ================== KHỞI ĐỘNG ================== */
-$("#verLbl").textContent="Phiên bản cập nhật: "+APP_VER;
+/* Giờ cập nhật = lúc file được đưa lên GitHub (giờ Việt Nam), tự động; không lấy được thì dùng APP_VER */
+(function(){const lm=new Date(document.lastModified),ok=!isNaN(lm)&&Math.abs(Date.now()-lm)>15000;
+  const f=ok?lm.toLocaleString("en-GB",{timeZone:"Asia/Ho_Chi_Minh",hour12:false,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}).replace(",",""):APP_VER;
+  $("#verLbl").textContent="Phiên bản cập nhật: "+f+" (giờ VN)"})();
 renderAll();renderPickers();renderPend();
 {const L=store.get("cham_last",null);if(L&&L.day===vnDate()&&L.rec)showDone(L.rec,pend().some(x=>x.id===L.rec.id)?"wait":L.state==="wait"?"ok":L.state)}
 try{if(localStorage.getItem("cham_tab")==="kq")showTab("kq")}catch(e){}
