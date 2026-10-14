@@ -965,7 +965,9 @@ function renderThang(ym,sums){
 }
 
 /* ================== CẢNH BÁO: lỗi lặp ≥3 ngày/tháng + LIỆT → phải chấm lại ================== */
-const HAN=3;                                                  // quá 3 ngày chưa chấm lại → Quá hạn
+const HAN=3;
+const CB_START="2026-10-14";                                  // cảnh báo LIỆT/lỗi lặp bắt đầu tính từ ngày này
+const cbMoc=ym=>{const m=mocOf(ym);return ym===CB_START.slice(0,7)&&CB_START<m?CB_START:m};                                                  // quá 3 ngày chưa chấm lại → Quá hạn
 const LIET_SET=new Set(Object.values(QMAP).filter(q=>q.liet).map(q=>q.no));
 const ST={qh:["Quá hạn","c-bad",0],vl:["Chấm lại vẫn lỗi","c-bad",1],cho:["Chờ chấm lại","c-warn",2],ok:["Đã xử lý","c-ok",3]};
 let cbList="mo",CB_ROWS=[];
@@ -1006,7 +1008,7 @@ function canhBao(s,sum,moc,today){
 }
 const TYPE_LBL={lap:"Lặp",liet:"LIỆT",qliet:"QLST báo câu LIỆT"};
 function renderLap(ym,sums){
-  const moc=mocOf(ym),end=monthEnd(ym),today=vnDate()<end?vnDate():end;
+  const moc=cbMoc(ym),end=monthEnd(ym),today=vnDate()<end?vnDate():end;
   const bySum={};sums.forEach(s=>bySum[s.mst]=s);
   const act=ACTIVE.filter(s=>s.khaiTruong<=end&&flt(s));
   const all=act.map(s=>({s,rsm:s.rsm,qltp:s.qltp,cb:canhBao(s,bySum[s.mst],moc,today)}));
@@ -1014,7 +1016,7 @@ function renderLap(ym,sums){
   const done=cbs.length-open.length;
   let h=kpis([[D(open.length),"Shop cần chấm lại",1],[D(cnt(open,c=>c.lap)),"Lỗi lặp ≥"+REPEAT+" ngày",1],[D(cnt(open,c=>c.liet)),"LIỆT",1],
     [D(cnt(open,c=>c.qliet)),"QLST báo câu LIỆT",1],[D(cnt(open,c=>c.status==="qh")),`Quá hạn (>${HAN} ngày)`,1],[cbs.length?P(done,cbs.length):"-","Đã xử lý"]]);
-  h+=`<p class="hint" style="margin-top:10px">Shop vào danh sách khi: một tiêu chí lỗi từ ${REPEAT} ngày trở lên trong tháng (từ ngày mốc ${dmy(moc)}), hoặc bị LIỆT, hoặc QLST tự báo lỗi câu LIỆT. <b>QLTP/RSM chấm lại</b> và chọn <b>Không lỗi</b> ở đúng tiêu chí → tự chuyển <b>Đã xử lý</b>. Quá ${HAN} ngày chưa chấm lại → <b>Quá hạn</b>.</p>`;
+  h+=`<p class="hint" style="margin-top:10px">Shop vào danh sách khi: một tiêu chí lỗi từ ${REPEAT} ngày trở lên trong tháng (tính từ ${dmy(moc)}), hoặc bị LIỆT, hoặc QLST tự báo lỗi câu LIỆT. <b>QLTP/RSM chấm lại</b> và chọn <b>Không lỗi</b> ở đúng tiêu chí → tự chuyển <b>Đã xử lý</b>. Quá ${HAN} ngày chưa chấm lại → <b>Quá hạn</b>.</p>`;
   const C=(f,cls)=>a=>{const v=f(a);return V(D(v),v?cls:"")};
   const cols=[
     {h:"Shop HĐ",f:a=>V(D(a.length))},
