@@ -15,6 +15,7 @@ img{max-width:100%}
 
 /* Layout: mobile-first single column; sticky score bar; zones as stacked sections; 26 questions as tap rows */
 :root{
+  --z1:#3d63b8; --z1s:#e5ecfa; --z2:#1d8a4a; --z2s:#e0f3e7; --z3:#c96a10; --z3s:#fdeedd; --z4:#127f9e; --z4s:#dff1f6; --z5:#7a4bb5; --z5s:#efe7f9;
   --bg:#f3f6f2; --surface:#ffffff; --sunk:#e8eee6; --line:#d5ddd2;
   --fg:#17221a; --muted:#5d6b60;
   --brand:#0b7a3b; --brand-ink:#ffffff; --brand-soft:#dcefe2;
@@ -25,12 +26,14 @@ img{max-width:100%}
   --r:10px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --z1:#8fb0ff; --z1s:#1b2540; --z2:#5fd394; --z2s:#14301f; --z3:#ffad5c; --z3s:#3a2612; --z4:#5cc9e6; --z4s:#11303a; --z5:#c3a0ff; --z5s:#2a1f3d;
   --bg:#0f1611; --surface:#17211a; --sunk:#1e2a21; --line:#2c3a30;
   --fg:#e6eee7; --muted:#9aaa9e;
   --brand:#3fbf73; --brand-ink:#08130c; --brand-soft:#1b3424;
   --bad:#ff6b5e; --bad-soft:#3a1c19; --ok:#4fd187; --ok-soft:#173222;
   --warn:#f0b04a; --warn-soft:#3a2c12; color-scheme:dark }}
 :root[data-theme="dark"]{
+  --z1:#8fb0ff; --z1s:#1b2540; --z2:#5fd394; --z2s:#14301f; --z3:#ffad5c; --z3s:#3a2612; --z4:#5cc9e6; --z4s:#11303a; --z5:#c3a0ff; --z5s:#2a1f3d;
   --bg:#0f1611; --surface:#17211a; --sunk:#1e2a21; --line:#2c3a30;
   --fg:#e6eee7; --muted:#9aaa9e;
   --brand:#3fbf73; --brand-ink:#08130c; --brand-soft:#1b3424;
@@ -66,10 +69,20 @@ textarea{min-height:56px;resize:vertical}
 .shopcard b{font-size:15px}
 .shopcard span{font-size:13px;color:var(--muted)}
 
-.zone{margin-top:22px}
-.zone-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;padding-inline:2px}
-.zone-h h2{font-size:16px;margin:0;font-weight:700}
-.zone-h .pts{font:700 13px var(--f-num);color:var(--muted);white-space:nowrap}
+.zone{margin-top:22px;--zc:var(--brand);--zs:var(--brand-soft)}
+.zone.z1{--zc:var(--z1);--zs:var(--z1s)} .zone.z2{--zc:var(--z2);--zs:var(--z2s)} .zone.z3{--zc:var(--z3);--zs:var(--z3s)}
+.zone.z4{--zc:var(--z4);--zs:var(--z4s)} .zone.z5{--zc:var(--z5);--zs:var(--z5s)}
+.zone-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;padding:10px 14px;border-radius:var(--r);background:var(--zs);border-left:6px solid var(--zc);position:sticky;top:0;z-index:2}
+.zone-h h2{font-size:16px;margin:0;font-weight:800;color:var(--zc);display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.02em}
+.zone-h .zn{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--zc);color:#fff;font:800 13px var(--f-num)}
+.zone-h .pts{font:700 13px var(--f-num);color:var(--zc);white-space:nowrap}
+.zone .q{border-left:4px solid var(--zc)}
+.zone .q.err{border-left-color:var(--bad)}
+.tbl-title{font-size:15px;margin:18px 0 6px}
+table.stat td{font-variant-numeric:tabular-nums}
+table.stat tr.grp td{background:var(--sunk);font-weight:700}
+table.stat tr.tot td{background:var(--brand-soft);font-weight:800;border-top:2px solid var(--brand)}
+td.c-bad{color:var(--bad);font-weight:700} td.c-warn{color:var(--warn);font-weight:700} td.c-ok{color:var(--ok);font-weight:700} td.muted{color:var(--muted)}
 .q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:10px;margin-bottom:8px}
 .q.err{border-color:var(--bad);background:var(--bad-soft)}
 .q.missing{outline:2px dashed var(--warn);outline-offset:2px}
@@ -87,6 +100,7 @@ textarea{min-height:56px;resize:vertical}
 .evi .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .photo-btn{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--bad);color:var(--bad);background:var(--surface);font:700 14px var(--f-body);padding:10px 14px;border-radius:8px;cursor:pointer}
 .photo-btn input{position:absolute;width:1px;height:1px;opacity:0}
+.photo-btn.alt{border-style:solid;border-color:var(--line);color:var(--fg)}
 .req{font-size:12px;font-weight:700;color:var(--bad)}
 .thumbs{display:flex;gap:6px;flex-wrap:wrap}
 .thumbs .t{position:relative}
@@ -145,11 +159,16 @@ h3{text-wrap:balance}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="firebase-config.js"></script>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+<!-- defer: thư viện tải song song, không chặn hiển thị giao diện -->
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script defer src="firebase-config.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -222,6 +241,11 @@ h3{text-wrap:balance}
       <div class="field" id="fMonth" hidden><label class="lbl" for="kqMonth">Tháng</label><input type="month" id="kqMonth"></div>
       <div class="field"><label class="lbl" for="kqRsm">RSM</label><select id="kqRsm"><option value="">Tất cả</option></select></div>
       <div class="field"><label class="lbl" for="kqQltp">QLTP</label><select id="kqQltp"><option value="">Tất cả</option></select></div>
+      <div class="field"><label class="lbl" for="kqSort">Sắp xếp</label><select id="kqSort">
+        <option value="ten">Theo RSM / QLTP (A→Z)</option>
+        <option value="pct">% chấm thấp → cao</option>
+        <option value="diem">Điểm TB thấp → cao</option>
+        <option value="liet">LIỆT nhiều → ít</option></select></div>
       <button class="ghost" type="button" id="kqReload">Làm mới</button>
     </div>
     <details class="panel" id="exportBox" style="margin-top:12px">
@@ -300,8 +324,10 @@ const dk=d=>"d"+d.replace(/-/g,"");
 const kd=k=>k.slice(1,5)+"-"+k.slice(5,7)+"-"+k.slice(7,9);
 const shortName=s=>String(s||"").replace(/^BHX_[A-Z]+_[A-Z0-9]+ - /,"");
 const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;
-const f1=v=>v==null?"–":v.toFixed(1);
+const f1=v=>v==null?"-":v.toFixed(1);
 const pct=(a,b)=>b?Math.round(a*100/b):0;
+const D=n=>n?n:"-";                                        // 0 → "-"
+const P=(a,b)=>a&&b?pct(a,b)+"%":"-";                      // 0% → "-"
 const addDays=(d,n)=>{const t=new Date(d+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
 const daysBetween=(a,b)=>Math.round((new Date(b+"T00:00:00Z")-new Date(a+"T00:00:00Z"))/864e5)+1; // inclusive
 const monthEnd=ym=>{const [y,m]=ym.split("-").map(Number);return new Date(Date.UTC(y,m,0)).toISOString().slice(0,10)};
@@ -435,7 +461,8 @@ function renderZones(){
   const rep=new Set(repeats(curSum).filter(x=>x.active).map(x=>x.no));
   $("#zones").innerHTML=Q.map(([z,items])=>{
     const tot=items.reduce((a,i)=>a+i[2],0);
-    return `<div class="zone"><div class="zone-h"><h2>${esc(z)}</h2><span class="pts">${items.length} câu · ${tot}đ</span></div>`+
+    const zi=Q.findIndex(x=>x[0]===z)+1;
+    return `<div class="zone z${zi}"><div class="zone-h"><h2><span class="zn">${zi}</span>${esc(z)}</h2><span class="pts">${items.length} câu · ${tot}đ</span></div>`+
     items.map(([no,text,pts,liet])=>{
       const a=S.ans[no]||{},imgs=a.imgs||[];
       return `<div class="q ${a.v==="bad"?"err":""}" id="q${no}">
@@ -449,7 +476,8 @@ function renderZones(){
         </div>
         ${a.v==="bad"?`<div class="evi">
           <div class="row">
-            <label class="photo-btn"><input type="file" accept="image/*" capture="environment" data-photo="${no}"><span>📷 Chụp ảnh đối soát</span></label>${imgs.length?"":'<span class="req">Bắt buộc ít nhất 1 ảnh</span>'}
+            <label class="photo-btn"><input type="file" accept="image/*" capture="environment" data-photo="${no}"><span>📷 Chụp ảnh</span></label>
+            <label class="photo-btn alt"><input type="file" accept="image/*" multiple data-photo="${no}"><span>🖼️ Chọn ảnh có sẵn</span></label>${imgs.length?"":'<span class="req">Bắt buộc ít nhất 1 ảnh</span>'}
             <div class="thumbs">${imgs.map((im,ix)=>`<div class="t"><img src="${esc(im.u)}" alt="Ảnh đối soát câu ${no}"><button type="button" class="x" data-rm="${no}:${ix}" aria-label="Xoá ảnh">×</button></div>`).join("")}</div>
           </div>
           <textarea id="note${no}" data-note="${no}" placeholder="Ghi chú / hướng xử lý (không bắt buộc)">${esc(a.note||"")}</textarea>
@@ -487,25 +515,41 @@ $("#zones").addEventListener("click",e=>{
 });
 $("#zones").addEventListener("input",e=>{const no=e.target.dataset.note;if(!no)return;S.ans[no].note=e.target.value;clearTimeout(saveDraft._t);saveDraft._t=setTimeout(saveDraft,400)});
 $("#zones").addEventListener("change",async e=>{
-  const no=e.target.dataset.photo;if(!no||!e.target.files[0])return;
-  if(!ready){toast("Chưa kết nối máy chủ, thử lại sau.");return}
-  if(!S.mst){toast("Chọn siêu thị trước khi chụp ảnh.");e.target.value="";return}
-  const sp=e.target.parentElement.querySelector("span");sp.textContent="Đang tải ảnh...";
-  try{
-    const b=await shrink(e.target.files[0]);
-    const path=`tam/${vnDate()}/${S.mst}/c${no}-${uid8()}.jpg`;
-    const ref=st.ref(path);
-    let snap;try{snap=await withTimeout(ref.put(b,{contentType:"image/jpeg"}),45000)}catch(err){await sleep(1500);snap=await withTimeout(ref.put(b,{contentType:"image/jpeg"}),45000)}
-    const u=await snap.ref.getDownloadURL();
-    BLOBS[path]=b;
-    const a=S.ans[no];(a.imgs||(a.imgs=[])).push({u,p:path});saveDraft();renderZones();
-  }catch(err){console.warn(err);sp.textContent="📷 Chụp ảnh đối soát";toast(err&&err.code==="timeout"?"Mạng yếu, ảnh chưa tải lên được. Thử lại.":"Không tải được ảnh, thử lại.")}
+  const no=e.target.dataset.photo,files=[...(e.target.files||[])];if(!no||!files.length)return;
+  if(!ready){toast("Chưa kết nối máy chủ, thử lại sau.");e.target.value="";return}
+  if(!S.mst){toast("Chọn siêu thị trước khi chụp/chọn ảnh.");e.target.value="";return}
+  const sp=e.target.parentElement.querySelector("span"),label=sp.textContent;
+  let ok=0,fail=0;
+  for(const [i,f] of files.slice(0,5).entries()){            // tối đa 5 ảnh mỗi lần chọn
+    sp.textContent=files.length>1?`Đang tải ${i+1}/${Math.min(files.length,5)}...`:"Đang tải ảnh...";
+    try{
+      const {blob,type,ext}=await prepImage(f);
+      const path=`tam/${vnDate()}/${S.mst}/c${no}-${uid8()}.${ext}`;
+      const ref=st.ref(path);
+      let snap;try{snap=await withTimeout(ref.put(blob,{contentType:type}),45000)}catch(err){await sleep(1500);snap=await withTimeout(ref.put(blob,{contentType:type}),45000)}
+      const u=await snap.ref.getDownloadURL();
+      BLOBS[path]={blob,type};
+      const a=S.ans[no];(a.imgs||(a.imgs=[])).push({u,p:path});ok++;
+    }catch(err){console.warn(err);fail++;if(err&&err.code==="toobig")toast("Ảnh quá lớn và máy không nén được. Chọn ảnh khác hoặc chụp trực tiếp.")}
+  }
+  e.target.value="";sp.textContent=label;saveDraft();renderZones();
+  if(fail&&!ok)toast("Mạng yếu hoặc ảnh lỗi, chưa tải được. Thử lại.");
+  else if(fail)toast(`Đã tải ${ok} ảnh, ${fail} ảnh lỗi.`);
+  if(files.length>5)toast("Mỗi lần chọn tối đa 5 ảnh.");
 });
+// Nén ảnh về JPEG ~1024px. Ảnh máy không đọc được (vd HEIC trên một số Android) thì gửi nguyên bản nếu < 3MB.
+async function prepImage(f){
+  try{const b=await shrink(f);return {blob:b,type:"image/jpeg",ext:"jpg"}}
+  catch(e){
+    if(f.size<3*1024*1024&&/^image\//.test(f.type||"image/heic")){const t=f.type||"image/heic";return {blob:f,type:t,ext:(t.split("/")[1]||"img").replace("jpeg","jpg")}}
+    throw {code:"toobig"};
+  }
+}
 const BLOBS={}; // ảnh đã nén trong phiên, dùng để chép sang giu/ khi lượt cần lưu lâu dài
 async function keepPhotos(){ // lượt LIỆT hoặc dưới 45đ: chép ảnh từ tam/ (tự xoá sau 45 ngày) sang giu/ (giữ lâu dài)
   for(const n in S.ans){const a=S.ans[n];if(a.v!=="bad")continue;
     for(const im of a.imgs||[]){if(!im.p||!im.p.startsWith("tam/")||!BLOBS[im.p])continue;
-      try{const np=im.p.replace(/^tam\//,"giu/");const sn=await withTimeout(st.ref(np).put(BLOBS[im.p],{contentType:"image/jpeg"}),30000);
+      try{const np=im.p.replace(/^tam\//,"giu/"),bb=BLOBS[im.p];const sn=await withTimeout(st.ref(np).put(bb.blob,{contentType:bb.type}),30000);
         im.u=await sn.ref.getDownloadURL();im.p=np}catch(e){console.warn("keepPhotos",e)}}}
   saveDraft();
 }
@@ -626,6 +670,8 @@ $("#kqMonth").addEventListener("change",()=>loadKQ());
 $("#kqRsm").addEventListener("change",()=>{$("#kqQltp").value="";fillKqFilters();loadKQ()});
 $("#kqQltp").addEventListener("change",()=>loadKQ());
 $("#kqReload").addEventListener("click",()=>loadKQ(true));
+$("#kqSort").addEventListener("change",()=>{try{localStorage.setItem("cham_sort",$("#kqSort").value)}catch(e){};loadKQ()});
+try{const v=localStorage.getItem("cham_sort");if(v)$("#kqSort").value=v}catch(e){}
 $("#kqMode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;kqMode=b.dataset.v;
   document.querySelectorAll("#kqMode button").forEach(x=>x.setAttribute("aria-pressed",x===b));loadKQ()});
 $("#kqBody").addEventListener("click",e=>{
@@ -655,6 +701,22 @@ function groupBlock(key,title,groups,rowHTML,shopsHTML){
 const gRow=(name,sub,pillTxt,cls)=>`<div style="min-width:0"><div class="nm">${esc(name)}</div><div class="meta">${sub}</div></div><span class="pill ${cls}">${pillTxt}</span>`;
 const shopLine=(s,right,cls)=>`<div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;font-size:14px;align-items:center"><span class="q-no">${esc(s.mst)}</span><span style="min-width:0">${esc(shortName(s.ten))}</span><span class="pill ${cls||""}" style="font-size:12px">${right}</span></div>`;
 
+const STAT_HEAD=["Shop HĐ","QLST đã chấm","% chấm","TB QLST","Lượt cấp trên","TB cấp trên","LIỆT","Dưới 45đ","Chưa chấm"];
+function sortG(list){
+  const m=$("#kqSort")?$("#kqSort").value:"ten",pc=g=>g.n?g.q.length/g.n:0,dv=g=>avg(g.q)??999;
+  const by={ten:(a,b)=>a.name.localeCompare(b.name,"vi",{numeric:true}),pct:(a,b)=>pc(a)-pc(b)||a.name.localeCompare(b.name,"vi"),
+    diem:(a,b)=>dv(a)-dv(b)||pc(a)-pc(b),liet:(a,b)=>b.liet-a.liet||pc(a)-pc(b)};
+  return list.slice().sort(by[m]||by.ten);
+}
+function pctCls(a,b){if(!b||!a)return "muted";const p=a*100/b;return p<80?"c-bad":p<100?"c-warn":"c-ok"}
+function statRow(g,cls){
+  const d=g.q.length;
+  return `<tr class="${cls}"><td>${cls==="grp"?"▸ ":""}${esc(g.name)}</td><td class="n">${D(g.n)}</td><td class="n">${D(d)}</td>
+    <td class="n ${pctCls(d,g.n)}">${P(d,g.n)}</td><td class="n">${f1(avg(g.q))}</td><td class="n">${D(g.k.length)}</td><td class="n">${f1(avg(g.k))}</td>
+    <td class="n ${g.liet?"c-bad":""}">${D(g.liet)}</td><td class="n ${g.low?"c-bad":""}">${D(g.low)}</td><td class="n ${g.n-d?"c-warn":""}">${D(g.n-d)}</td></tr>`;
+}
+function tableRaw(head,rows){return `<div class="tblwrap"><table class="stat"><thead><tr>${head.map((h,i)=>`<th${i?' style="text-align:right"':""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`}
+function statTable(first,list,tot){return tableRaw([first,...STAT_HEAD],list.map(g=>statRow(g,"")).concat(tot?[statRow(tot,"tot")]:[]))}
 function renderNgay(day,dAll,kAll){
   const act=ACTIVE.filter(s=>s.khaiTruong<=day&&flt(s)),recs=dAll.filter(flt),kts=kAll.filter(flt);
   const byM={};recs.forEach(r=>byM[r.mst]=r);
@@ -662,19 +724,23 @@ function renderNgay(day,dAll,kAll){
   const aQ=avg(recs.map(r=>r.diem)),aK=avg(kts.map(r=>r.diem));
   const pairs=kts.filter(k=>byM[k.mst]).map(k=>byM[k.mst].diem-k.diem);
   const lietN=kts.filter(r=>r.liet).length+recs.filter(r=>r.liet).length;
-  let h=kpis([[act.length,"Shop hoạt động"],[`${recs.length} · ${pct(recs.length,act.length)}%`,"QLST đã chấm"],
+  let h=kpis([[D(act.length),"Shop hoạt động"],[recs.length?`${recs.length} · ${P(recs.length,act.length)}`:"-","QLST đã chấm"],
     [f1(aQ),"Điểm TB QLST tự chấm"],[`${f1(aK)}${kts.length?` <small style="font-size:12px;color:var(--muted)">(${kts.length} lượt)</small>`:""}`,"Điểm TB QLTP/RSM/chéo"],
-    [lietN,"Lượt LIỆT",1],[recs.filter(r=>!r.liet&&r.diem<LOW).length,`Lượt dưới ${LOW}đ`,1],[miss.length,"Shop chưa chấm",1]]);
+    [D(lietN),"Lượt LIỆT",1],[D(recs.filter(r=>!r.liet&&r.diem<LOW).length),`Lượt dưới ${LOW}đ`,1],[D(miss.length),"Shop chưa chấm",1]]);
   if(pairs.length){const d=avg(pairs);h+=`<div class="notice ${d>5?"bad":"ok"}" style="margin-top:10px">${pairs.length} shop được cả QLST và cấp trên chấm cùng ngày: QLST tự chấm ${d>=0?"cao hơn":"thấp hơn"} trung bình <b>${Math.abs(d).toFixed(1)} điểm</b>.${d>5?" QLST đang tự chấm dễ — cần kiểm tra lại.":""}</div>`}
-  // nhóm theo QLTP
-  const G={};act.forEach(s=>{const g=G[s.qltp]||(G[s.qltp]={name:s.qltp,rsm:s.rsm,shops:[],q:[],k:[],liet:0,low:0});g.shops.push(s)});
-  recs.forEach(r=>{const g=G[r.qltp];if(g){g.q.push(r.diem);if(r.liet)g.liet++;else if(r.diem<LOW)g.low++}});
-  kts.forEach(r=>{const g=G[r.qltp];if(g){g.k.push(r.diem);if(r.liet)g.liet++}});
-  const groups=Object.values(G).sort((a,b)=>(a.q.length/a.shops.length)-(b.q.length/b.shops.length)||(avg(a.q)??101)-(avg(b.q)??101));
-  h+=groupBlock("ngayQ",`Top ${TOPN} QLTP cần chú ý (tỷ lệ QLST chấm thấp nhất)`,groups,
-    g=>{const p=pct(g.q.length,g.shops.length);return gRow(g.name,`${esc(g.rsm)} · ${g.q.length}/${g.shops.length} shop đã chấm · TB QLST ${f1(avg(g.q))} · TB cấp trên ${f1(avg(g.k))}${g.liet?` · <b style="color:var(--bad)">${g.liet} LIỆT</b>`:""}`,p+"%",p<80?"low":p<100?"mid":"good")},
-    g=>g.shops.slice().sort((a,b)=>(byM[a.mst]?byM[a.mst].diem:-1)-(byM[b.mst]?byM[b.mst].diem:-1)).map(s=>{const r=byM[s.mst];
-      return shopLine(s,r?`${r.liet?"LIỆT · ":""}${r.diem}đ`:"Chưa chấm",r?pillCls(r):"low")}).join(""));
+  // ===== Bảng 1: RSM · Bảng 2: QLTP theo RSM =====
+  const mk=(name,rsm)=>({name,rsm,n:0,q:[],k:[],liet:0,low:0});
+  const R1={},Q1={},T=mk("TỔNG","");
+  act.forEach(s=>{(R1[s.rsm]||(R1[s.rsm]=mk(s.rsm,s.rsm))).n++;(Q1[s.qltp]||(Q1[s.qltp]=mk(s.qltp,s.rsm))).n++;T.n++});
+  const add=(r,f)=>[R1[r.rsm],Q1[r.qltp],T].forEach(g=>{if(g)f(g)});
+  recs.forEach(r=>add(r,g=>{g.q.push(r.diem);if(r.liet)g.liet++;else if(r.diem<LOW)g.low++}));
+  kts.forEach(r=>add(r,g=>{g.k.push(r.diem);if(r.liet)g.liet++}));
+  h+=`<h3 class="tbl-title">Bảng 1 · Tổng hợp theo RSM</h3>`+statTable("RSM",sortG(Object.values(R1)),T);
+  const rsmList=sortG(Object.values(R1));
+  const rows2=[];
+  rsmList.forEach(r=>{rows2.push(statRow(r,"grp"));sortG(Object.values(Q1).filter(q=>q.rsm===r.name)).forEach(q=>rows2.push(statRow(q,"")))});
+  rows2.push(statRow(T,"tot"));
+  h+=`<h3 class="tbl-title">Bảng 2 · QLTP theo RSM</h3>`+tableRaw(["QLTP / RSM",...STAT_HEAD],rows2);
   const tabs=[["liet",`LIỆT & dưới ${LOW}đ`],["kt","Lượt QLTP/RSM/chéo"],["miss","Chưa chấm"],["top","Lỗi nhiều nhất"]];
   if(!tabs.some(t=>t[0]===kqList))kqList="liet";
   h+=`<div class="subtabs" id="kqSub">${tabs.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${kqList===v}">${t}</button>`).join("")}</div>`;
@@ -704,19 +770,19 @@ function renderThang(ym,sums){
   const covered=rows.filter(r=>r.ktQ.length).length;
   const allK=rows.flatMap(r=>r.kt);
   let h=`<div class="notice ok" style="margin-top:10px">Ngày mốc tháng ${ym.slice(5)}: <b>${dmy(moc)}</b> → tính đến <b>${dmy(to)}</b> (${daysBetween(moc,to)} ngày). Shop khai trương sau mốc tính từ ngày khai trương. Đổi ngày mốc ở sheet CAU_HINH_WEB.</div>`;
-  h+=kpis([[act.length,"Shop hoạt động"],[`${done}/${need}`,"Lượt QLST đã chấm / phải chấm"],[`${pct(done,need)}%`,"Tỷ lệ QLST chấm",pct(done,need)<80],
-    [f1(avg(rows.filter(r=>r.qAvg!=null).map(r=>r.qAvg))),"Điểm TB QLST"],[`${covered}/${act.length}`,"Shop QLTP đã chấm ≥1 lần"],
-    [f1(avg(allK.map(x=>x.diem))),"Điểm TB QLTP/RSM/chéo"],[allK.filter(x=>x.liet).length,"Lượt LIỆT",1],[rows.reduce((a,r)=>a+r.rep,0),"Cảnh báo lặp lại",1]]);
+  h+=kpis([[D(act.length),"Shop hoạt động"],[done?`${done}/${need}`:"-","Lượt QLST đã chấm / phải chấm"],[P(done,need),"Tỷ lệ QLST chấm",pct(done,need)<80],
+    [f1(avg(rows.filter(r=>r.qAvg!=null).map(r=>r.qAvg))),"Điểm TB QLST"],[covered?`${covered}/${act.length}`:"-","Shop QLTP đã chấm ≥1 lần"],
+    [f1(avg(allK.map(x=>x.diem))),"Điểm TB QLTP/RSM/chéo"],[D(allK.filter(x=>x.liet).length),"Lượt LIỆT",1],[D(rows.reduce((a,r)=>a+r.rep,0)),"Cảnh báo lặp lại",1]]);
   const G={};rows.forEach(r=>{const g=G[r.s.qltp]||(G[r.s.qltp]={name:r.s.qltp,rsm:r.s.rsm,rows:[]});g.rows.push(r)});
   const gs=Object.values(G).map(g=>({...g,need:g.rows.reduce((a,r)=>a+r.need,0),done:g.rows.reduce((a,r)=>a+r.done,0),cov:g.rows.filter(r=>r.ktQ.length).length,
     kAvg:avg(g.rows.flatMap(r=>r.ktQ.map(x=>x.diem))),liet:g.rows.reduce((a,r)=>a+r.liet,0)}));
   // Top 5 theo % QLST chấm
   h+=groupBlock("thQ",`Top ${TOPN} QLTP có tỷ lệ QLST chấm thấp nhất`,gs.slice().sort((a,b)=>a.done/a.need-b.done/b.need),
-    g=>{const p=pct(g.done,g.need);return gRow(g.name,`${esc(g.rsm)} · ${g.done}/${g.need} lượt · ${g.rows.length} shop`,p+"%",p<80?"low":p<100?"mid":"good")},
+    g=>{const p=pct(g.done,g.need);return gRow(g.name,`${esc(g.rsm)} · ${D(g.done)}/${g.need} lượt · ${g.rows.length} shop`,P(g.done,g.need),p<80?"low":p<100?"mid":"good")},
     g=>g.rows.slice().sort((a,b)=>a.done/a.need-b.done/b.need).map(r=>shopLine(r.s,`${r.done}/${r.need} ngày`,r.done<r.need?"low":"good")).join(""));
   // Top 5 theo độ phủ QLTP
   h+=groupBlock("thK",`Top ${TOPN} QLTP chấm shop ít nhất (mục tiêu mỗi shop ≥1 lần/tháng)`,gs.slice().sort((a,b)=>a.cov/a.rows.length-b.cov/b.rows.length),
-    g=>{const p=pct(g.cov,g.rows.length);return gRow(g.name,`${esc(g.rsm)} · đã chấm ${g.cov}/${g.rows.length} shop · TB ${f1(g.kAvg)}${g.liet?` · <b style="color:var(--bad)">${g.liet} LIỆT</b>`:""}`,p+"%",p<80?"low":p<100?"mid":"good")},
+    g=>{const p=pct(g.cov,g.rows.length);return gRow(g.name,`${esc(g.rsm)} · đã chấm ${D(g.cov)}/${g.rows.length} shop · TB ${f1(g.kAvg)}${g.liet?` · <b style="color:var(--bad)">${g.liet} LIỆT</b>`:""}`,P(g.cov,g.rows.length),p<80?"low":p<100?"mid":"good")},
     g=>g.rows.slice().sort((a,b)=>a.ktQ.length-b.ktQ.length).map(r=>shopLine(r.s,r.ktQ.length?`${r.ktQ.length} lần · ${f1(avg(r.ktQ.map(x=>x.diem)))}đ`:"Chưa chấm",r.ktQ.length?"good":"low")).join(""));
   $("#kqBody").innerHTML=h;
 }
@@ -724,7 +790,7 @@ function renderThang(ym,sums){
 function renderLap(ym,sums){
   const rows=[];sums.filter(flt).forEach(s=>repeats(s).forEach(x=>{if(x.active||x.fixed)rows.push({s,x})}));
   const act=rows.filter(r=>r.x.active),fixed=rows.filter(r=>r.x.fixed);
-  let h=kpis([[act.length,"Cảnh báo đang mở",1],[new Set(act.map(r=>r.s.mst)).size,"Shop có cảnh báo",1],[fixed.length,"Đã khắc phục (QLTP chấm lại)"]]);
+  let h=kpis([[D(act.length),"Cảnh báo đang mở",1],[D(new Set(act.map(r=>r.s.mst)).size),"Shop có cảnh báo",1],[D(fixed.length),"Đã khắc phục (QLTP chấm lại)"]]);
   h+=`<p class="hint" style="margin-top:10px">Cảnh báo khi một tiêu chí có lỗi từ ${REPEAT} ngày trở lên trong tháng. Tự gỡ khi QLTP hoặc RSM chấm lại shop và chọn <b>Không lỗi</b> ở đúng tiêu chí; lỗi lại ${REPEAT} lần sẽ cảnh báo lại.</p>`;
   const card=({s,x},open)=>{const qq=QMAP[x.no];return `<details class="shop ${open?"is-liet":""}"><summary>
     <div style="min-width:0"><div class="nm">${esc(s.mst)} · ${esc(shortName(s.ten))}</div>
@@ -812,18 +878,31 @@ $("#exMonth").addEventListener("click",e=>runExport("month",e.currentTarget));
 renderAll();renderPickers();renderPend();
 try{if(localStorage.getItem("cham_tab")==="kq")showTab("kq")}catch(e){}
 setInterval(renderDup,30000);
-(async()=>{
+// 1) Danh sách shop lưu trên máy → hiện ngay, không chờ mạng
+const SHOP_CACHE="cham_shops_v1";
+const cachedShops=store.get(SHOP_CACHE,null);
+if(cachedShops&&cachedShops.data)setShops(cachedShops);
+// 2) Thư viện Firebase tải xong (defer) → kết nối, rồi kiểm tra danh sách mới ở nền
+async function boot(){
   if(!initFirebase())return;
   try{
-    await withTimeout(firebase.auth().signInAnonymously(),20000);
+    const auth=firebase.auth();
+    const u=await new Promise(res=>{const off=auth.onAuthStateChanged(x=>{off();res(x)})}); // đã đăng nhập ẩn danh trước đó thì dùng lại
+    if(!u)await withTimeout(auth.signInAnonymously(),20000);
     ready=true;sysMsg("");
-    const s=await retry(()=>fs.collection("config").doc("shops").get());
-    if(s.exists)setShops(s.data());else sysMsg("Chưa có danh sách shop. Người quản lý cần chạy đồng bộ danh sách (Apps Script → syncShops).");
-    renderZones();
+    if(cachedShops&&cachedShops.data){loadQltpDone();loadShopState()}
     if(pend().length)fs.waitForPendingWrites().then(()=>{setPend([]);toast("Đã gửi xong các lượt chờ")}).catch(()=>{});
     if(!$("#view-kq").hidden)loadKQ();
-  }catch(e){console.warn(e);sysMsg(e&&e.code==="timeout"?"Mạng yếu, chưa kết nối được máy chủ. Kiểm tra mạng rồi tải lại trang.":"Không kết nối được máy chủ ("+esc(e&&e.code||"lỗi")+"). Tải lại trang.")}
-})();
+    const s=await retry(()=>fs.collection("config").doc("shops").get());
+    if(s.exists){const d=s.data(),ver=d.capNhat&&d.capNhat.toMillis?d.capNhat.toMillis():0;
+      if(!cachedShops||cachedShops.ver!==ver||cachedShops.moc!==d.moc){
+        const c={data:d.data,moc:d.moc,ver};store.set(SHOP_CACHE,c);setShops(c)}}
+    else if(!cachedShops)sysMsg("Chưa có danh sách shop. Người quản lý cần chạy đồng bộ danh sách (Apps Script → syncShops).");
+    renderZones();
+  }catch(e){console.warn(e);
+    if(!ready)sysMsg(e&&e.code==="timeout"?"Mạng yếu, chưa kết nối được máy chủ. Kiểm tra mạng rồi tải lại trang.":"Không kết nối được máy chủ ("+esc(e&&e.code||"lỗi")+"). Tải lại trang.")}
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 </script>
 
 </body>
