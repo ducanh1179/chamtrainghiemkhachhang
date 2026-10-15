@@ -358,7 +358,7 @@ const Q=[
   [26,"Sàn bán hàng, lối khách di chuyển có rác, bụi hay vết dơ; hoặc trần nhà có mạng nhện nhìn thấy rõ?",2,0]]]
 ];
 const QMAP={};Q.forEach(([z,items])=>items.forEach(i=>QMAP[i[0]]={no:i[0],text:i[1],pts:i[2],liet:!!i[3],zone:z}));
-const APP_VER="15/10/2026 21:30";            // ← đổi mỗi lần cập nhật web
+const APP_VER="15/10/2026 21:20";            // ← đổi mỗi lần cập nhật web
 const LOCK_MIN=10, REPEAT=3, LOW=45, TOPN=5, KEEP_DAYS=45, EXPORT_MAX_DAYS=31;
 
 /* ================== TIỆN ÍCH ================== */
@@ -414,6 +414,7 @@ function saveDraft(){ // ảnh đang tải (chưa có link) không lưu vào nh�
   store.set("cham_draft",{ht:S.ht,ans,day:vnDate()})}
 function saveProfile(){store.set("cham_profile",{cv:S.cv,manv:$("#manv").value.trim(),ten:$("#tenNguoi").value.trim(),rsm:S.rsm,qltp:S.qltp,mst:S.mst})}
 const lietCounts=()=>S.cv!=="QLST"||S.ht==="Chấm chéo";
+const selfQ=()=>S.cv==="QLST"&&S.ht!=="Chấm chéo";            // QLST tự chấm shop mình (1 lượt/ngày). Chấm chéo ghi riêng như cấp trên.
 
 /* ---------- lỗi lặp lại ---------- */
 function repeats(sum){
@@ -486,14 +487,14 @@ function findShop(){const m=$("#findMst").value.trim();if(!m)return;const s=BYMS
 
 /* ---------- khoá 1 lượt QLST/ngày ---------- */
 const recAt=r=>!r?0:(r.t0&&typeof r.t0.toMillis==="function"?r.t0.toMillis():(r.at||0));
-function lockState(){if(S.cv!=="QLST"||!curRec)return {locked:false,r:curRec};
+function lockState(){if(!selfQ()||!curRec)return {locked:false,r:curRec};
   const mins=(Date.now()-recAt(curRec))/60000;return {r:curRec,locked:mins>LOCK_MIN,left:Math.max(0,Math.ceil(LOCK_MIN-mins))}}
 function renderDup(){
   const n=$("#dupNotice"),L=lockState(),btn=$("#btnSubmit");
   if(!btn.dataset.busy)btn.disabled=false;
   if(!S.mst||!L.r){n.hidden=true;return}
   n.hidden=false;const r=L.r,info=`QLST đã chấm lúc ${vnTime(recAt(r))} · ${r.diem} điểm`;
-  if(S.cv!=="QLST"){n.className="notice ok";n.textContent=info+". Lượt QLTP/RSM được ghi riêng, không thay lượt QLST.";return}
+  if(!selfQ()){n.className="notice ok";n.textContent=info+(S.cv==="QLST"?". Lượt chấm chéo được ghi riêng, không thay lượt QLST của shop.":". Lượt QLTP/RSM được ghi riêng, không thay lượt QLST.");return}
   if(L.locked){n.className="notice ok";n.innerHTML=`<b>Shop đã có lượt chấm hôm nay.</b> ${esc(info)}. Mỗi shop chỉ chấm 1 lần/ngày.`;btn.disabled=true}
   else{n.className="notice";n.textContent=`${info}. Còn ${L.left} phút để gửi lại (lần mới thay lần cũ), sau đó khoá.`}
 }
@@ -556,7 +557,7 @@ function renderHeader(){
   $("#lietNotice").hidden=lietCounts();
   $("#dateHint").textContent="Ngày chấm: "+new Date().toLocaleDateString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"})+" (tự ghi nhận)";
 }
-function renderAll(){renderHeader();renderZones();renderBar()}
+function renderAll(){renderHeader();renderZones();renderBar();renderDup()}
 
 $("#seg-cv").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.cv=b.dataset.v;saveProfile();renderAll();renderDup();renderRep()});
 $("#seg-ht").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.ht=b.dataset.v;
@@ -664,7 +665,7 @@ function buildJob(){
   const loi=Object.keys(S.ans).filter(n=>S.ans[n].v==="bad").map(n=>({q:+n,note:(S.ans[n].note||"").trim(),imgs:(S.ans[n].imgs||[]).filter(x=>x.u).map(x=>({u:x.u,p:x.p})),
     tru:QMAP[n].pts}));
   const ok=Object.keys(S.ans).filter(n=>S.ans[n].v==="ok").map(Number);
-  const isQ=S.cv==="QLST";
+  const isQ=selfQ();
   const id=isQ?`${day}_${s.mst}`:`${day}_${s.mst}_${uid8()}`;
   const hasT0=curRec&&curRec.ngay===day&&curRec.t0&&typeof curRec.t0.toMillis==="function";
   const t0=isQ&&hasT0?curRec.t0:FV.serverTimestamp(); // giữ mốc lần gửi đầu
@@ -676,7 +677,7 @@ function buildJob(){
     hetHan:firebase.firestore.Timestamp.fromMillis(new Date(addDays(monthEnd(ym),100)+"T00:00:00Z").getTime())};
   if(isQ){patch.qlst={[dk(day)]:{diem:c.diem,ht:S.ht}};
     if(curRec&&curRec.ngay===day)(curRec.loi||[]).forEach(l=>{if(!loi.some(x=>x.q===l.q))patch.loi["q"+l.q]={[dk(day)]:FV.delete()}})}
-  else{patch.kt={[id]:{ngay:day,diem:c.diem,cv:S.cv,ht:S.ht,liet:rec.liet,nguoi:rec.nguoi}};patch.clear={};ok.forEach(n=>patch.clear["q"+n]=day)}
+  else{patch.kt={[id]:{ngay:day,diem:c.diem,cv:S.cv,ht:S.ht,liet:rec.liet,nguoi:rec.nguoi}};if(S.cv!=="QLST"){patch.clear={};ok.forEach(n=>patch.clear["q"+n]=day)}}
   loi.forEach(l=>patch.loi["q"+l.q]={[dk(day)]:l.imgs});
   return {col:isQ?"qlst":"kt",id,rec,sumId:`${ym}_${s.mst}`,patch,isQ};
 }
@@ -710,7 +711,7 @@ $("#btnSubmit").addEventListener("click",async()=>{
   if(v){toast(v.msg);v.el&&v.el.scrollIntoView({behavior:"smooth",block:"center"});return}
   if(!ready){toast("Chưa kết nối máy chủ. Kiểm tra mạng rồi mở lại trang.");return}
   const btn=$("#btnSubmit");btn.disabled=true;btn.dataset.busy="1";btn.textContent="Đang gửi...";
-  if(S.cv==="QLST"){ // đọc lại lượt hiện có để giữ mốc t0 và kiểm tra khoá
+  if(selfQ()){ // đọc lại lượt hiện có để giữ mốc t0 và kiểm tra khoá
     try{const sn=await withTimeout(fs.collection("qlst").doc(`${vnDate()}_${S.mst}`).get(),8000);curRec=sn.exists?sn.data():null}catch(e){}
     if(lockState().locked){btn.textContent="Gửi kết quả";delete btn.dataset.busy;renderPickers();toast("Shop đã có lượt chấm hôm nay — không gửi thêm.");return}
   }
@@ -886,7 +887,7 @@ function rowDet(cells,detail,cls,ncol){const id="d"+(++DET_ID);
 const TX=v=>`<td class="tx">${v}</td>`,TN=(v,c)=>`<td class="n ${c||""}">${v}</td>`,TL=v=>`<td>${v}</td>`;
 function statTable(first,list,tot){return tableRaw([first,...STAT_HEAD],list.map(g=>statRow(g,"")).concat(tot?[statRow(tot,"tot")]:[]))}
 function renderNgay(day,dAll,kAll){
-  const act=ACTIVE.filter(s=>s.khaiTruong<=day&&flt(s)),recs=dAll.filter(flt),kts=kAll.filter(flt);
+  const act=ACTIVE.filter(s=>s.khaiTruong<=day&&flt(s)),recs=dAll.filter(r=>flt(r)&&r.ht!=="Chấm chéo"),kts=kAll.concat(dAll.filter(r=>r.ht==="Chấm chéo")).filter(flt);
   const byM={};recs.forEach(r=>byM[r.mst]=r);
   const miss=act.filter(s=>!byM[s.mst]);
   const aQ=avg(recs.map(r=>r.diem)),aK=avg(kts.map(r=>r.diem));
@@ -952,8 +953,12 @@ function renderThang(ym,sums){
   const act=ACTIVE.filter(s=>s.khaiTruong<=end&&flt(s));
   const items=act.map(s=>{const sm=bySum[s.mst]||{},from=s.khaiTruong>moc?s.khaiTruong:moc;
     const need=started&&to>=from?daysBetween(from,to):0;
-    const qd=Object.entries(sm.qlst||{}).filter(([k])=>{const d=kd(k);return d>=from&&d<=to}).map(([,v])=>v.diem);
-    const kt=Object.values(sm.kt||{}).filter(x=>x.ngay>=moc&&x.ngay<=to),ktQ=kt.filter(x=>x.cv==="QLTP");
+    const qe=Object.entries(sm.qlst||{}).filter(([k])=>{const d=kd(k);return d>=from&&d<=to});
+    const qd=qe.filter(([,v])=>v.ht!=="Chấm chéo").map(([,v])=>v.diem);
+    // lượt chấm chéo cũ (trước 15/10 bản sửa) từng ghi vào ô QLST: tính là lượt chéo
+    const cheo=qe.filter(([,v])=>v.ht==="Chấm chéo").map(([k,v])=>({ngay:kd(k),diem:v.diem,cv:"QLST",ht:"Chấm chéo",
+      liet:Object.values(QMAP).some(q=>q.liet&&((sm.loi||{})["q"+q.no]||{})[k])}));
+    const kt=Object.values(sm.kt||{}).filter(x=>x.ngay>=moc&&x.ngay<=to).concat(cheo),ktQ=kt.filter(x=>x.cv==="QLTP");
     return {s,rsm:s.rsm,qltp:s.qltp,need,done:qd.length,qd,kt,ktQ,liet:cnt(kt,x=>x.liet),rep:repeats(sm).filter(x=>x.active).length}});
   const need=sum(items,r=>r.need),done=sum(items,r=>r.done),cov=cnt(items,r=>r.ktQ.length),allK=items.flatMap(r=>r.kt),allQ=items.flatMap(r=>r.qd);
   let h=started?`<div class="notice ok" style="margin-top:10px">Tháng ${ym.slice(5)}/${ym.slice(0,4)}: tính từ ngày mốc <b>${dmy(moc)}</b> đến <b>${dmy(to)}</b> (${daysBetween(moc,to)} ngày). Shop khai trương sau mốc tính từ ngày khai trương. Đổi ngày mốc ở sheet CAU_HINH_WEB.</div>`
